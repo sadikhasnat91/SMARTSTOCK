@@ -1,0 +1,32 @@
+name: smart_stock
+description: "SmartStock — Intelligent Inventory & Supply Chain Management Platform"
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.13.5
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State management & navigation
+  get: ^4.7.2
+
+  # Charts
+  fl_chart: ^0.70.2
+
+  # Icons
+  cupertino_icons: ^1.0.8
+
+  # Utilities
+  intl: ^0.19.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
