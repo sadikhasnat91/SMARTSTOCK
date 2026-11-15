@@ -30,12 +30,16 @@ class _AppDataTableState extends State<AppDataTable> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Header
+        // 3D Header
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 11),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           decoration: const BoxDecoration(
-            color: AppColors.secondaryBackground,
-            border: Border(bottom: BorderSide(color: AppColors.border, width: 1)),
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFFFAFCFB), Color(0xFFF1F6F3)],
+            ),
+            border: Border(bottom: BorderSide(color: AppColors.border, width: 1.2)),
           ),
           child: Row(
             children: List.generate(widget.columns.length, (i) {
@@ -56,7 +60,14 @@ class _AppDataTableState extends State<AppDataTable> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(widget.columns[i], style: AppTextStyles.labelSmall),
+                    Text(
+                      widget.columns[i],
+                      style: AppTextStyles.labelSmall.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textSecondary,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
                     if (widget.sortable)
                       Padding(
                         padding: const EdgeInsets.only(left: 4),
@@ -66,7 +77,7 @@ class _AppDataTableState extends State<AppDataTable> {
                                   ? Icons.arrow_upward_rounded
                                   : Icons.arrow_downward_rounded)
                               : Icons.unfold_more_rounded,
-                          size: 13,
+                          size: 14,
                           color: _sortColumn == i
                               ? AppColors.primary
                               : AppColors.textMuted,
@@ -87,14 +98,14 @@ class _AppDataTableState extends State<AppDataTable> {
           final row = widget.rows[rowIndex];
           return Container(
             decoration: BoxDecoration(
-              color: rowIndex.isOdd ? const Color(0xFFFAFCFB) : AppColors.surface,
+              color: rowIndex.isOdd ? const Color(0xFFF9FBFA) : AppColors.surface,
               border: const Border(
                 bottom: BorderSide(color: AppColors.divider, width: 1),
               ),
             ),
             child: InkWell(
               onTap: () {},
-              hoverColor: AppColors.primarySurface.withValues(alpha: 0.4),
+              hoverColor: AppColors.primarySurface.withValues(alpha: 0.5),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 13),
                 child: Row(
@@ -141,6 +152,7 @@ class TablePagination extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       decoration: const BoxDecoration(
+        color: AppColors.surface,
         border: Border(top: BorderSide(color: AppColors.border, width: 1)),
       ),
       child: isMobile
@@ -149,7 +161,7 @@ class TablePagination extends StatelessWidget {
               children: [
                 Text(
                   '$start–$end of $totalItems',
-                  style: AppTextStyles.caption,
+                  style: AppTextStyles.caption.copyWith(fontWeight: FontWeight.w600),
                 ),
                 Row(
                   mainAxisSize: MainAxisSize.min,
@@ -161,7 +173,10 @@ class TablePagination extends StatelessWidget {
                     ),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 8),
-                      child: Text('$currentPage / $totalPages', style: AppTextStyles.labelSmall),
+                      child: Text(
+                        '$currentPage / $totalPages',
+                        style: AppTextStyles.labelSmall.copyWith(fontWeight: FontWeight.w700),
+                      ),
                     ),
                     _PageBtn(
                       icon: Icons.chevron_right_rounded,
@@ -175,8 +190,8 @@ class TablePagination extends StatelessWidget {
           : Row(
               children: [
                 Text(
-                  'Showing $start–$end of $totalItems',
-                  style: AppTextStyles.caption,
+                  'Showing $start–$end of $totalItems entries',
+                  style: AppTextStyles.caption.copyWith(fontWeight: FontWeight.w600),
                 ),
                 const Spacer(),
                 _PageBtn(
@@ -194,19 +209,24 @@ class TablePagination extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 2),
                       child: InkWell(
                         onTap: () => onPageChanged(page),
-                        borderRadius: BorderRadius.circular(6),
-                        child: Container(
-                          width: 30,
-                          height: 30,
+                        borderRadius: BorderRadius.circular(8),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 150),
+                          width: 32,
+                          height: 32,
                           decoration: BoxDecoration(
-                            color: isActive ? AppColors.primary : Colors.transparent,
-                            borderRadius: BorderRadius.circular(6),
+                            gradient: isActive ? AppColors.primaryGradient : null,
+                            color: isActive ? null : Colors.transparent,
+                            borderRadius: BorderRadius.circular(8),
+                            border: isActive ? null : Border.all(color: AppColors.border, width: 1),
+                            boxShadow: isActive ? AppColors.shadow3DButton : null,
                           ),
                           child: Center(
                             child: Text(
                               '$page',
                               style: AppTextStyles.labelSmall.copyWith(
                                 color: isActive ? Colors.white : AppColors.textSecondary,
+                                fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
                               ),
                             ),
                           ),
@@ -242,21 +262,22 @@ class _PageBtn extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: enabled ? onTap : null,
-      borderRadius: BorderRadius.circular(6),
+      borderRadius: BorderRadius.circular(8),
       child: Container(
-        width: 30,
-        height: 30,
+        width: 32,
+        height: 32,
         decoration: BoxDecoration(
+          color: enabled ? AppColors.surface : AppColors.secondaryBackground,
           border: Border.all(color: AppColors.border, width: 1),
-          borderRadius: BorderRadius.circular(6),
+          borderRadius: BorderRadius.circular(8),
+          boxShadow: enabled ? AppColors.shadow3DSubtle : null,
         ),
         child: Icon(
           icon,
-          size: 16,
-          color: enabled ? AppColors.textSecondary : AppColors.textMuted,
+          size: 17,
+          color: enabled ? AppColors.textPrimary : AppColors.textMuted,
         ),
       ),
     );
   }
 }
-

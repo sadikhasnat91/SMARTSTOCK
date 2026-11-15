@@ -41,26 +41,44 @@ class AppTextField extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         if (label != null) ...[
-          Text(label!, style: AppTextStyles.labelMedium),
+          Text(
+            label!,
+            style: AppTextStyles.labelMedium.copyWith(
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ),
           const SizedBox(height: 6),
         ],
-        TextFormField(
-          controller: controller,
-          validator: validator,
-          keyboardType: keyboardType,
-          obscureText: obscureText,
-          maxLines: maxLines,
-          readOnly: readOnly,
-          onTap: onTap,
-          onChanged: onChanged,
-          autofocus: autofocus,
-          style: AppTextStyles.bodyMedium,
-          decoration: InputDecoration(
-            hintText: hint,
-            prefixIcon: prefixIcon != null
-                ? Icon(prefixIcon, size: 18, color: AppColors.textMuted)
-                : null,
-            suffixIcon: suffix,
+        Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.02),
+                offset: const Offset(0, 1),
+                blurRadius: 3,
+              ),
+            ],
+          ),
+          child: TextFormField(
+            controller: controller,
+            validator: validator,
+            keyboardType: keyboardType,
+            obscureText: obscureText,
+            maxLines: maxLines,
+            readOnly: readOnly,
+            onTap: onTap,
+            onChanged: onChanged,
+            autofocus: autofocus,
+            style: AppTextStyles.bodyMedium,
+            decoration: InputDecoration(
+              hintText: hint,
+              prefixIcon: prefixIcon != null
+                  ? Icon(prefixIcon, size: 18, color: AppColors.textMuted)
+                  : null,
+              suffixIcon: suffix,
+            ),
           ),
         ),
       ],
@@ -84,8 +102,20 @@ class AppSearchField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 38,
+    return Container(
+      height: 40,
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppColors.border, width: 1.2),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0F1F1A).withValues(alpha: 0.03),
+            offset: const Offset(0, 2),
+            blurRadius: 4,
+          ),
+        ],
+      ),
       child: TextFormField(
         controller: controller,
         onChanged: onChanged,
@@ -93,27 +123,21 @@ class AppSearchField extends StatelessWidget {
         decoration: InputDecoration(
           hintText: hint,
           hintStyle: AppTextStyles.bodyMedium.copyWith(color: AppColors.textMuted),
-          prefixIcon: const Icon(Icons.search_outlined, size: 18, color: AppColors.textMuted),
+          prefixIcon: const Icon(Icons.search_rounded, size: 18, color: AppColors.textMuted),
           suffixIcon: (controller?.text.isNotEmpty ?? false)
               ? IconButton(
-                  icon: const Icon(Icons.close, size: 16, color: AppColors.textMuted),
+                  icon: const Icon(Icons.close_rounded, size: 16, color: AppColors.textMuted),
                   onPressed: onClear,
                 )
               : null,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 0),
           filled: true,
-          fillColor: AppColors.surface,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: AppColors.border, width: 1),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: AppColors.border, width: 1),
-          ),
+          fillColor: Colors.transparent,
+          border: InputBorder.none,
+          enabledBorder: InputBorder.none,
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+            borderRadius: BorderRadius.circular(10),
+            borderSide: const BorderSide(color: AppColors.primary, width: 1.8),
           ),
         ),
       ),
@@ -144,25 +168,42 @@ class AppDropdownField<T> extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         if (label != null) ...[
-          Text(label!, style: AppTextStyles.labelMedium),
+          Text(
+            label!,
+            style: AppTextStyles.labelMedium.copyWith(
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ),
           const SizedBox(height: 6),
         ],
-        DropdownButtonFormField<T>(
-          initialValue: value,
-          items: items,
-          onChanged: onChanged,
-          isExpanded: true,
-          style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimary),
-          decoration: InputDecoration(
-            hintText: hint,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.02),
+                offset: const Offset(0, 1),
+                blurRadius: 3,
+              ),
+            ],
           ),
-          borderRadius: BorderRadius.circular(8),
-          icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 18, color: AppColors.textMuted),
-          dropdownColor: AppColors.surface,
+          child: DropdownButtonFormField<T>(
+            initialValue: value,
+            items: items,
+            onChanged: onChanged,
+            isExpanded: true,
+            style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimary),
+            decoration: InputDecoration(
+              hintText: hint,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+            ),
+            borderRadius: BorderRadius.circular(12),
+            icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 20, color: AppColors.textMuted),
+            dropdownColor: AppColors.surface,
+          ),
         ),
       ],
     );
   }
 }
-

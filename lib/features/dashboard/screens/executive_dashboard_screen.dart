@@ -32,8 +32,10 @@ class ExecutiveDashboardScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildHeader(),
+          _buildHeroBanner(context, isMobile: false),
           const SizedBox(height: 24),
+          _buildHeader(),
+          const SizedBox(height: 20),
           _buildKpiGrid(context),
           const SizedBox(height: 24),
           Row(
@@ -66,6 +68,8 @@ class ExecutiveDashboardScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          _buildHeroBanner(context, isMobile: true),
+          const SizedBox(height: 16),
           _buildHeader(),
           const SizedBox(height: 16),
           _buildKpiGridMobile(context),
@@ -84,6 +88,95 @@ class ExecutiveDashboardScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildHeroBanner(BuildContext context, {required bool isMobile}) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(isMobile ? 18 : 26),
+      decoration: BoxDecoration(
+        gradient: AppColors.heroGradient,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.15),
+          width: 1.2,
+        ),
+        boxShadow: AppColors.shadow3DElevated,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                ),
+                child: const Icon(
+                  Icons.auto_awesome_rounded,
+                  color: Color(0xFF6EE7B7),
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Welcome back, Sadik Hasnat 👋',
+                      style: AppTextStyles.h2.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'All 4 warehouses operational • 98.4% fulfillment rate • 3 smart reorders ready for review.',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: const Color(0xFFD1FAE5),
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              _HeroQuickPill(
+                icon: Icons.add_box_rounded,
+                label: 'Add Product',
+                onTap: () => Get.toNamed(AppRoutes.productAdd),
+              ),
+              _HeroQuickPill(
+                icon: Icons.qr_code_scanner_rounded,
+                label: 'Scan Barcode',
+                onTap: () => Get.toNamed(AppRoutes.barcodeManagement),
+              ),
+              _HeroQuickPill(
+                icon: Icons.auto_awesome_rounded,
+                label: 'AI Insights',
+                onTap: () => Get.toNamed(AppRoutes.intelligenceDashboard),
+              ),
+              _HeroQuickPill(
+                icon: Icons.compare_arrows_rounded,
+                label: 'Stock Transfer',
+                onTap: () => Get.toNamed(AppRoutes.transferCreate),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildHeader() {
     return Wrap(
       alignment: WrapAlignment.spaceBetween,
@@ -94,10 +187,13 @@ class ExecutiveDashboardScreen extends StatelessWidget {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Executive Dashboard', style: AppTextStyles.h1),
+            Text(
+              'Performance Overview',
+              style: AppTextStyles.h2.copyWith(fontWeight: FontWeight.w700),
+            ),
             const SizedBox(height: 4),
             Text(
-              'Monday, November 2, 2026  •  Fiscal Year 2026',
+              'Real-time inventory metrics and sales analytics',
               style: AppTextStyles.bodySmall,
             ),
           ],
@@ -110,13 +206,15 @@ class ExecutiveDashboardScreen extends StatelessWidget {
               label: 'Export Report',
               variant: AppButtonVariant.outline,
               prefixIcon: Icons.file_download_outlined,
-              onPressed: () {},
+              onPressed: () {
+                Get.snackbar('Exporting', 'Generating executive summary PDF...');
+              },
             ),
             AppButton(
-              label: 'Date Range',
-              variant: AppButtonVariant.outline,
-              prefixIcon: Icons.calendar_today_outlined,
-              onPressed: () {},
+              label: 'Smart Reorder',
+              variant: AppButtonVariant.primary,
+              prefixIcon: Icons.auto_awesome_rounded,
+              onPressed: () => Get.toNamed(AppRoutes.smartReorder),
             ),
           ],
         ),
@@ -125,6 +223,8 @@ class ExecutiveDashboardScreen extends StatelessWidget {
   }
 
   Widget _buildKpiGrid(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    final isTablet = width < 1100;
     final cards = MockDashboardData.kpiCards;
     final iconMap = {
       'trending_up': Icons.trending_up_rounded,
@@ -146,13 +246,13 @@ class ExecutiveDashboardScreen extends StatelessWidget {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: cards.length,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        mainAxisSpacing: 16,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: isTablet ? 2 : 3,
         crossAxisSpacing: 16,
-        childAspectRatio: 2.0,
+        mainAxisSpacing: 16,
+        mainAxisExtent: 126,
       ),
-      itemBuilder: (_, i) {
+      itemBuilder: (context, i) {
         final c = cards[i];
         return KpiCard(
           label: c['label'] as String,
@@ -160,8 +260,9 @@ class ExecutiveDashboardScreen extends StatelessWidget {
           change: c['change'] as String?,
           changePositive: c['changePositive'] as bool?,
           sub: c['sub'] as String?,
-          icon: iconMap[c['icon']] ?? Icons.info_outline,
+          icon: iconMap[c['icon']] ?? Icons.insights,
           iconColor: colorMap[c['icon']],
+          onTap: () => _handleKpiTap(i),
         );
       },
     );
@@ -175,52 +276,76 @@ class ExecutiveDashboardScreen extends StatelessWidget {
       'inventory_2': Icons.inventory_2_outlined,
       'warning_amber': Icons.warning_amber_outlined,
     };
+    final colorMap = {
+      'trending_up': AppColors.success,
+      'shopping_bag': AppColors.info,
+      'inventory_2': AppColors.primary,
+      'warning_amber': AppColors.warning,
+    };
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: cards.length,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        mainAxisSpacing: 12,
         crossAxisSpacing: 12,
-        childAspectRatio: 1.15,
+        mainAxisSpacing: 12,
+        mainAxisExtent: 126,
       ),
-      itemBuilder: (_, i) {
+      itemBuilder: (context, i) {
         final c = cards[i];
         return KpiCard(
           label: c['label'] as String,
           value: c['value'] as String,
           change: c['change'] as String?,
           changePositive: c['changePositive'] as bool?,
-          icon: iconMap[c['icon']] ?? Icons.info_outline,
+          icon: iconMap[c['icon']] ?? Icons.insights,
+          iconColor: colorMap[c['icon']],
+          onTap: () => _handleKpiTap(i),
         );
       },
     );
   }
 
+  void _handleKpiTap(int index) {
+    switch (index) {
+      case 0:
+        Get.toNamed(AppRoutes.salesOrders);
+        break;
+      case 1:
+        Get.toNamed(AppRoutes.salesOrders);
+        break;
+      case 2:
+        Get.toNamed(AppRoutes.products);
+        break;
+      case 3:
+        Get.toNamed(AppRoutes.stockoutRisk);
+        break;
+      case 4:
+        Get.toNamed(AppRoutes.dispatch);
+        break;
+      case 5:
+        Get.toNamed(AppRoutes.intelligenceDashboard);
+        break;
+    }
+  }
+
   Widget _buildRevenueChart() {
     final data = MockDashboardData.revenueChart;
     return SectionCard(
-      title: 'Revenue Overview',
+      title: 'Revenue & Target Trend',
       titleTrailing: Wrap(
         spacing: 12,
         runSpacing: 6,
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
-          _LegendItem(color: AppColors.primary, label: 'Revenue'),
-          _LegendItem(color: AppColors.border, label: 'Target'),
-          AppButton(
-            label: 'Last 6 Months',
-            variant: AppButtonVariant.outline,
-            suffixIcon: Icons.keyboard_arrow_down_rounded,
-            onPressed: () {},
-            height: 30,
-          ),
+          _LegendItem(color: AppColors.primary, label: 'Actual Revenue'),
+          _LegendItem(color: AppColors.borderDark, label: 'Forecast Target'),
         ],
       ),
       padding: const EdgeInsets.all(20),
       child: SizedBox(
-        height: 220,
+        height: 230,
         child: LineChart(
           LineChartData(
             gridData: FlGridData(
@@ -239,7 +364,7 @@ class ExecutiveDashboardScreen extends StatelessWidget {
                   reservedSize: 48,
                   getTitlesWidget: (value, _) => Text(
                     '\$${(value / 1000).toStringAsFixed(0)}k',
-                    style: AppTextStyles.caption,
+                    style: AppTextStyles.caption.copyWith(fontWeight: FontWeight.w600),
                   ),
                 ),
               ),
@@ -251,7 +376,10 @@ class ExecutiveDashboardScreen extends StatelessWidget {
                     if (idx >= 0 && idx < data.length) {
                       return Padding(
                         padding: const EdgeInsets.only(top: 8),
-                        child: Text(data[idx]['month'] as String, style: AppTextStyles.caption),
+                        child: Text(
+                          data[idx]['month'] as String,
+                          style: AppTextStyles.caption.copyWith(fontWeight: FontWeight.w600),
+                        ),
                       );
                     }
                     return const SizedBox();
@@ -263,17 +391,34 @@ class ExecutiveDashboardScreen extends StatelessWidget {
             ),
             borderData: FlBorderData(show: false),
             lineBarsData: [
-              // Revenue line
+              // Revenue line with gradient glow
               LineChartBarData(
                 spots: data.asMap().entries.map((e) =>
                     FlSpot(e.key.toDouble(), (e.value['revenue'] as int).toDouble())).toList(),
                 isCurved: true,
                 color: AppColors.primary,
-                barWidth: 2.5,
-                dotData: const FlDotData(show: false),
+                barWidth: 3,
+                dotData: FlDotData(
+                  show: true,
+                  getDotPainter: (spot, percent, barData, index) {
+                    return FlDotCirclePainter(
+                      radius: 4,
+                      color: Colors.white,
+                      strokeWidth: 2.5,
+                      strokeColor: AppColors.primary,
+                    );
+                  },
+                ),
                 belowBarData: BarAreaData(
                   show: true,
-                  color: AppColors.primary.withValues(alpha: 0.08),
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      AppColors.primaryLight.withValues(alpha: 0.28),
+                      AppColors.primaryLight.withValues(alpha: 0.0),
+                    ],
+                  ),
                 ),
               ),
               // Target line
@@ -282,7 +427,7 @@ class ExecutiveDashboardScreen extends StatelessWidget {
                     FlSpot(e.key.toDouble(), (e.value['target'] as int).toDouble())).toList(),
                 isCurved: true,
                 color: AppColors.borderDark,
-                barWidth: 1.5,
+                barWidth: 2,
                 dashArray: [5, 5],
                 dotData: const FlDotData(show: false),
                 belowBarData: BarAreaData(show: false),
@@ -305,11 +450,11 @@ class ExecutiveDashboardScreen extends StatelessWidget {
         child: Column(
           children: [
             SizedBox(
-              height: 180,
+              height: 170,
               child: PieChart(
                 PieChartData(
                   sectionsSpace: 3,
-                  centerSpaceRadius: 48,
+                  centerSpaceRadius: 46,
                   pieTouchData: PieTouchData(
                     touchCallback: (event, response) {
                       setState(() {
@@ -326,7 +471,7 @@ class ExecutiveDashboardScreen extends StatelessWidget {
                     return PieChartSectionData(
                       value: e.value['value'] as double,
                       color: AppColors.chartColors[e.key % AppColors.chartColors.length],
-                      radius: isTouched ? 64 : 56,
+                      radius: isTouched ? 60 : 52,
                       title: '',
                     );
                   }).toList(),
@@ -352,7 +497,7 @@ class ExecutiveDashboardScreen extends StatelessWidget {
                   ),
                   Text(
                     '${e.value['value']}%',
-                    style: AppTextStyles.labelSmall,
+                    style: AppTextStyles.labelSmall.copyWith(fontWeight: FontWeight.w700),
                   ),
                 ],
               ),
@@ -367,13 +512,16 @@ class ExecutiveDashboardScreen extends StatelessWidget {
     final alerts = MockDashboardData.lowStockAlerts;
     return SectionCard(
       title: 'Low Stock Alerts',
-      titleTrailing: Row(
+      titleTrailing: Wrap(
+        crossAxisAlignment: WrapCrossAlignment.center,
+        spacing: 8,
+        runSpacing: 4,
         children: [
           AppBadge(
-            label: '${alerts.length} items',
+            label: '${alerts.length} critical',
             variant: AppBadgeVariant.warning,
+            dot: true,
           ),
-          const SizedBox(width: 12),
           AppButton(
             label: 'View All',
             variant: AppButtonVariant.ghost,
@@ -395,7 +543,7 @@ class ExecutiveDashboardScreen extends StatelessWidget {
       titleTrailing: AppButton(
         label: 'View All',
         variant: AppButtonVariant.ghost,
-        onPressed: () {},
+        onPressed: () => Get.toNamed(AppRoutes.auditLogs),
         height: 30,
       ),
       child: Column(
@@ -409,7 +557,7 @@ class ExecutiveDashboardScreen extends StatelessWidget {
     return SectionCard(
       title: 'Recent Transactions',
       titleTrailing: AppButton(
-        label: 'View All',
+        label: 'View All Orders',
         variant: AppButtonVariant.ghost,
         onPressed: () => Get.toNamed(AppRoutes.salesOrders),
         height: 30,
@@ -418,21 +566,25 @@ class ExecutiveDashboardScreen extends StatelessWidget {
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
         child: SizedBox(
-          width: 720,
+          width: 740,
           child: Column(
             children: [
-              // Table header
+              // 3D Table Header
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 decoration: const BoxDecoration(
-                  color: AppColors.secondaryBackground,
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Color(0xFFFAFCFB), Color(0xFFF1F6F3)],
+                  ),
                   border: Border(bottom: BorderSide(color: AppColors.border, width: 1)),
                 ),
                 child: Row(
                   children: [
                     Expanded(flex: 2, child: Text('ID', style: AppTextStyles.labelSmall)),
                     Expanded(flex: 1, child: Text('Type', style: AppTextStyles.labelSmall)),
-                    Expanded(flex: 3, child: Text('Party', style: AppTextStyles.labelSmall)),
+                    Expanded(flex: 3, child: Text('Party / Customer', style: AppTextStyles.labelSmall)),
                     Expanded(flex: 2, child: Text('Amount', style: AppTextStyles.labelSmall)),
                     Expanded(flex: 2, child: Text('Status', style: AppTextStyles.labelSmall)),
                     Expanded(flex: 2, child: Text('Date', style: AppTextStyles.labelSmall)),
@@ -444,25 +596,28 @@ class ExecutiveDashboardScreen extends StatelessWidget {
                 return Container(
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 13),
                   decoration: BoxDecoration(
-                    color: e.key.isOdd ? const Color(0xFFFAFCFB) : AppColors.surface,
+                    color: e.key.isOdd ? const Color(0xFFF9FBFA) : AppColors.surface,
                     border: const Border(bottom: BorderSide(color: AppColors.divider, width: 1)),
                   ),
                   child: Row(
                     children: [
-                      Expanded(flex: 2, child: Text(t['id'] as String, style: AppTextStyles.mono.copyWith(fontSize: 12))),
+                      Expanded(
+                        flex: 2,
+                        child: Text(t['id'] as String, style: AppTextStyles.mono.copyWith(fontWeight: FontWeight.w600)),
+                      ),
                       Expanded(
                         flex: 1,
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                           decoration: BoxDecoration(
                             color: (t['type'] == 'Sale' ? AppColors.infoSurface : AppColors.successSurface),
-                            borderRadius: BorderRadius.circular(4),
+                            borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
                             t['type'] as String,
                             style: AppTextStyles.caption.copyWith(
                               color: t['type'] == 'Sale' ? AppColors.info : AppColors.success,
-                              fontWeight: FontWeight.w500,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
                         ),
@@ -483,6 +638,51 @@ class ExecutiveDashboardScreen extends StatelessWidget {
   }
 }
 
+class _HeroQuickPill extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _HeroQuickPill({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.14),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.25),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 16, color: Colors.white),
+            const SizedBox(width: 7),
+            Text(
+              label,
+              style: AppTextStyles.labelSmall.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _LegendItem extends StatelessWidget {
   final Color color;
   final String label;
@@ -491,17 +691,18 @@ class _LegendItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Container(
           width: 12,
-          height: 3,
+          height: 4,
           decoration: BoxDecoration(
             color: color,
             borderRadius: BorderRadius.circular(2),
           ),
         ),
         const SizedBox(width: 6),
-        Text(label, style: AppTextStyles.caption),
+        Text(label, style: AppTextStyles.caption.copyWith(fontWeight: FontWeight.w500)),
       ],
     );
   }
@@ -523,15 +724,18 @@ class _LowStockRow extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 36,
-            height: 36,
+            width: 38,
+            height: 38,
             decoration: BoxDecoration(
               color: isVeryLow ? AppColors.dangerSurface : AppColors.warningSurface,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: (isVeryLow ? AppColors.danger : AppColors.warning).withValues(alpha: 0.2),
+              ),
             ),
             child: Icon(
-              isVeryLow ? Icons.error_outline : Icons.warning_amber_outlined,
-              size: 18,
+              isVeryLow ? Icons.error_outline_rounded : Icons.warning_amber_rounded,
+              size: 20,
               color: isVeryLow ? AppColors.danger : AppColors.warning,
             ),
           ),
@@ -552,6 +756,7 @@ class _LowStockRow extends StatelessWidget {
                 '${alert['stock']} units',
                 style: AppTextStyles.labelSmall.copyWith(
                   color: isVeryLow ? AppColors.danger : AppColors.warning,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
               Text('Min: ${alert['minStock']}', style: AppTextStyles.caption),
@@ -601,17 +806,21 @@ class _ActivityRow extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(8)),
-            child: Icon(icon, size: 16, color: color),
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: bg,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: color.withValues(alpha: 0.2)),
+            ),
+            child: Icon(icon, size: 17, color: color),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(activity['title'] as String, style: AppTextStyles.bodySmall.copyWith(color: AppColors.textPrimary)),
+                Text(activity['title'] as String, style: AppTextStyles.bodySmall.copyWith(color: AppColors.textPrimary, fontWeight: FontWeight.w500)),
                 const SizedBox(height: 2),
                 Text(activity['sub'] as String, style: AppTextStyles.caption),
               ],
@@ -624,4 +833,3 @@ class _ActivityRow extends StatelessWidget {
     );
   }
 }
-

@@ -20,7 +20,7 @@ class _NavGroup {
 final _navGroups = [
   _NavGroup(label: 'Overview', items: [
     _NavItem(icon: Icons.dashboard_outlined, label: 'Executive Dashboard', route: AppRoutes.executiveDashboard),
-    _NavItem(icon: Icons.inventory_outlined, label: 'Inventory Dashboard', route: AppRoutes.inventoryDashboard),
+    _NavItem(icon: Icons.inventory_2_outlined, label: 'Inventory Dashboard', route: AppRoutes.inventoryDashboard),
   ]),
   _NavGroup(label: 'Inventory', items: [
     _NavItem(icon: Icons.category_outlined, label: 'Products', route: AppRoutes.products),
@@ -101,39 +101,57 @@ class AppSidebar extends StatelessWidget {
 
             return Column(
               children: [
-                // Logo area
+                // 3D Brand Header
                 SizedBox(
-                  height: 60,
+                  height: 64,
                   child: Padding(
                     padding: EdgeInsets.symmetric(horizontal: isCompact ? 8 : 16),
                     child: isCompact
                         ? Center(
                             child: InkWell(
                               onTap: onToggle,
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(10),
                               child: Container(
-                                width: 32,
-                                height: 32,
+                                width: 36,
+                                height: 36,
                                 decoration: BoxDecoration(
-                                  color: AppColors.primary,
-                                  borderRadius: BorderRadius.circular(8),
+                                  gradient: AppColors.primaryGradient,
+                                  borderRadius: BorderRadius.circular(10),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppColors.primary.withValues(alpha: 0.4),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 3),
+                                    ),
+                                  ],
                                 ),
-                                child: const Icon(Icons.inventory_2_rounded, size: 18, color: Colors.white),
+                                child: const Icon(Icons.inventory_2_rounded, size: 20, color: Colors.white),
                               ),
                             ),
                           )
                         : Row(
                             children: [
                               Container(
-                                width: 32,
-                                height: 32,
+                                width: 36,
+                                height: 36,
                                 decoration: BoxDecoration(
-                                  color: AppColors.primary,
-                                  borderRadius: BorderRadius.circular(8),
+                                  gradient: AppColors.primaryGradient,
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(
+                                    color: Colors.white.withValues(alpha: 0.2),
+                                    width: 1,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppColors.primary.withValues(alpha: 0.4),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 3),
+                                    ),
+                                  ],
                                 ),
-                                child: const Icon(Icons.inventory_2_rounded, size: 18, color: Colors.white),
+                                child: const Icon(Icons.inventory_2_rounded, size: 20, color: Colors.white),
                               ),
-                              const SizedBox(width: 10),
+                              const SizedBox(width: 12),
                               Expanded(
                                 child: Column(
                                   mainAxisSize: MainAxisSize.min,
@@ -141,32 +159,43 @@ class AppSidebar extends StatelessWidget {
                                   children: [
                                     Text(
                                       'SmartStock',
-                                      style: AppTextStyles.h4.copyWith(color: Colors.white),
+                                      style: AppTextStyles.h4.copyWith(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w700,
+                                        letterSpacing: -0.2,
+                                      ),
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                     Text(
-                                      'v1.0.0',
-                                      style: AppTextStyles.caption.copyWith(color: AppColors.sidebarGroupLabel),
+                                      'Intelligent ERP • v1.0',
+                                      style: AppTextStyles.caption.copyWith(
+                                        color: AppColors.sidebarGroupLabel,
+                                        fontSize: 11,
+                                      ),
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                   ],
                                 ),
                               ),
-                              const SizedBox(width: 6),
-                              InkWell(
-                                onTap: onToggle,
-                                borderRadius: BorderRadius.circular(6),
-                                child: const Padding(
-                                  padding: EdgeInsets.all(6),
-                                  child: Icon(Icons.menu_rounded, size: 18, color: AppColors.sidebarText),
+                              if (onToggle != null)
+                                InkWell(
+                                  onTap: onToggle,
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(6),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.sidebarHoverBg,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: const Icon(Icons.menu_rounded, size: 18, color: AppColors.sidebarText),
+                                  ),
                                 ),
-                              ),
                             ],
                           ),
                   ),
                 ),
                 const Divider(color: Color(0xFF1E3028), height: 1),
-                // Nav groups
+                // Nav groups list
                 Expanded(
                   child: ListView(
                     padding: const EdgeInsets.symmetric(vertical: 8),
@@ -180,37 +209,52 @@ class AppSidebar extends StatelessWidget {
                   ),
                 ),
                 const Divider(color: Color(0xFF1E3028), height: 1),
-                // Profile section
+                // 3D Profile footer
                 Padding(
                   padding: EdgeInsets.all(isCompact ? 8 : 12),
                   child: InkWell(
                     onTap: () => Get.toNamed(AppRoutes.profile),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(10),
                     child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: isCompact ? 4 : 8, vertical: 8),
+                      padding: EdgeInsets.symmetric(horizontal: isCompact ? 4 : 10, vertical: 8),
                       decoration: BoxDecoration(
                         color: AppColors.sidebarHoverBg,
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.05),
+                          width: 1,
+                        ),
                       ),
                       child: isCompact
                           ? Center(
                               child: CircleAvatar(
-                                radius: 14,
+                                radius: 15,
                                 backgroundColor: AppColors.primary,
                                 child: Text(
-                                  'AR',
-                                  style: AppTextStyles.labelSmall.copyWith(color: Colors.white, fontSize: 11),
+                                  'SH',
+                                  style: AppTextStyles.labelSmall.copyWith(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700),
                                 ),
                               ),
                             )
                           : Row(
                               children: [
-                                CircleAvatar(
-                                  radius: 14,
-                                  backgroundColor: AppColors.primary,
-                                  child: Text(
-                                    'AR',
-                                    style: AppTextStyles.labelSmall.copyWith(color: Colors.white, fontSize: 11),
+                                Container(
+                                  padding: const EdgeInsets.all(1.5),
+                                  decoration: const BoxDecoration(
+                                    gradient: AppColors.primaryGradient,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: CircleAvatar(
+                                    radius: 14,
+                                    backgroundColor: const Color(0xFF0F1F1A),
+                                    child: Text(
+                                      'SH',
+                                      style: AppTextStyles.labelSmall.copyWith(
+                                        color: Colors.white,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
                                   ),
                                 ),
                                 const SizedBox(width: 10),
@@ -220,13 +264,19 @@ class AppSidebar extends StatelessWidget {
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Text(
-                                        'Ahmed Rahman',
-                                        style: AppTextStyles.labelSmall.copyWith(color: Colors.white),
+                                        'Sadik Hasnat',
+                                        style: AppTextStyles.labelSmall.copyWith(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w600,
+                                        ),
                                         overflow: TextOverflow.ellipsis,
                                       ),
                                       Text(
-                                        'Warehouse Manager',
-                                        style: AppTextStyles.caption.copyWith(color: AppColors.sidebarGroupLabel),
+                                        'Administrator',
+                                        style: AppTextStyles.caption.copyWith(
+                                          color: AppColors.sidebarGroupLabel,
+                                          fontSize: 10.5,
+                                        ),
                                         overflow: TextOverflow.ellipsis,
                                       ),
                                     ],
@@ -265,12 +315,13 @@ class _SidebarGroup extends StatelessWidget {
       children: [
         if (!collapsed)
           Padding(
-            padding: const EdgeInsets.only(left: 16, top: 16, bottom: 4, right: 16),
+            padding: const EdgeInsets.only(left: 16, top: 16, bottom: 6, right: 16),
             child: Text(
               group.label.toUpperCase(),
               style: AppTextStyles.caption.copyWith(
                 color: AppColors.sidebarGroupLabel,
-                letterSpacing: 0.8,
+                letterSpacing: 0.9,
+                fontWeight: FontWeight.w700,
                 fontSize: 10,
               ),
             ),
@@ -287,7 +338,7 @@ class _SidebarGroup extends StatelessWidget {
   }
 }
 
-class _SidebarNavItem extends StatelessWidget {
+class _SidebarNavItem extends StatefulWidget {
   final _NavItem item;
   final bool collapsed;
   final bool isActive;
@@ -299,67 +350,109 @@ class _SidebarNavItem extends StatelessWidget {
   });
 
   @override
+  State<_SidebarNavItem> createState() => _SidebarNavItemState();
+}
+
+class _SidebarNavItemState extends State<_SidebarNavItem> {
+  bool _isHovered = false;
+
+  @override
   Widget build(BuildContext context) {
+    final active = widget.isActive;
+    final collapsed = widget.collapsed;
+
     return Tooltip(
-      message: collapsed ? item.label : '',
+      message: collapsed ? widget.item.label : '',
       preferBelow: false,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
-        child: InkWell(
-          onTap: () => Get.toNamed(item.route),
-          borderRadius: BorderRadius.circular(7),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 150),
-            padding: EdgeInsets.symmetric(
-              horizontal: collapsed ? 0 : 10,
-              vertical: 8,
-            ),
-            decoration: BoxDecoration(
-              color: isActive ? AppColors.sidebarActiveBg : Colors.transparent,
-              borderRadius: BorderRadius.circular(7),
-            ),
-            child: collapsed
-                ? Center(
-                    child: Icon(
-                      item.icon,
-                      size: 20,
-                      color: isActive ? AppColors.primary : AppColors.sidebarText,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+        child: MouseRegion(
+          onEnter: (_) => setState(() => _isHovered = true),
+          onExit: (_) => setState(() => _isHovered = false),
+          child: InkWell(
+            onTap: () => Get.toNamed(widget.item.route),
+            borderRadius: BorderRadius.circular(10),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 160),
+              padding: EdgeInsets.symmetric(
+                horizontal: collapsed ? 0 : 12,
+                vertical: 9,
+              ),
+              decoration: BoxDecoration(
+                gradient: active
+                    ? const LinearGradient(
+                        colors: [Color(0xFF1B382D), Color(0xFF132820)],
+                      )
+                    : (_isHovered
+                        ? const LinearGradient(
+                            colors: [Color(0xFF152A22), Color(0xFF0F1F19)],
+                          )
+                        : null),
+                borderRadius: BorderRadius.circular(10),
+                border: active
+                    ? Border.all(
+                        color: AppColors.primary.withValues(alpha: 0.4),
+                        width: 1,
+                      )
+                    : null,
+                boxShadow: active
+                    ? [
+                        BoxShadow(
+                          color: AppColors.primary.withValues(alpha: 0.2),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ]
+                    : null,
+              ),
+              child: collapsed
+                  ? Center(
+                      child: Icon(
+                        widget.item.icon,
+                        size: 20,
+                        color: active ? AppColors.primaryLight : (_isHovered ? Colors.white : AppColors.sidebarText),
+                      ),
+                    )
+                  : Row(
+                      children: [
+                        Icon(
+                          widget.item.icon,
+                          size: 19,
+                          color: active ? AppColors.primaryLight : (_isHovered ? Colors.white : AppColors.sidebarText),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            widget.item.label,
+                            style: AppTextStyles.labelMedium.copyWith(
+                              color: active ? Colors.white : (_isHovered ? Colors.white : AppColors.sidebarText),
+                              fontWeight: active ? FontWeight.w600 : FontWeight.w400,
+                              fontSize: 13,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (active)
+                          Container(
+                            width: 6,
+                            height: 6,
+                            decoration: BoxDecoration(
+                              color: AppColors.primaryLight,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.primaryLight.withValues(alpha: 0.8),
+                                  blurRadius: 4,
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
                     ),
-                  )
-                : Row(
-                    children: [
-                      Icon(
-                        item.icon,
-                        size: 18,
-                        color: isActive ? AppColors.primary : AppColors.sidebarText,
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          item.label,
-                          style: AppTextStyles.labelMedium.copyWith(
-                            color: isActive ? AppColors.sidebarActiveText : AppColors.sidebarText,
-                            fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
-                            fontSize: 13,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      if (isActive)
-                        Container(
-                          width: 5,
-                          height: 5,
-                          decoration: const BoxDecoration(
-                            color: AppColors.primary,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                    ],
-                  ),
+            ),
           ),
         ),
       ),
     );
   }
 }
-

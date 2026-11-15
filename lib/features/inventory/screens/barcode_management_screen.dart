@@ -277,38 +277,131 @@ class _BarcodeManagementScreenState extends State<BarcodeManagementScreen> {
   }
 
   void _showScanModal(BuildContext context) {
+    final lookupCtrl = TextEditingController(text: '8901234567890');
     showDialog(
       context: context,
       builder: (_) => AppDialog(
-        title: 'Barcode Reader Simulation',
+        title: '3D Barcode & Laser Reader',
+        width: 500,
         content: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // High-Tech 3D Scanner Viewport
             Container(
-              height: 180,
+              height: 200,
               width: double.infinity,
               decoration: BoxDecoration(
-                color: Colors.black87,
-                borderRadius: BorderRadius.circular(10),
+                gradient: const LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0xFF0F1B16), Color(0xFF050B08)],
+                ),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.primaryLight.withValues(alpha: 0.4), width: 1.5),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.25),
+                    blurRadius: 16,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
               ),
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  const Icon(Icons.qr_code_scanner_rounded, size: 84, color: AppColors.primaryLight),
+                  // Scanner Reticle
+                  Container(
+                    width: 220,
+                    height: 120,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: AppColors.primaryLight.withValues(alpha: 0.6), width: 1.5),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Center(
+                      child: Icon(
+                        Icons.qr_code_scanner_rounded,
+                        size: 70,
+                        color: AppColors.primaryLight.withValues(alpha: 0.4),
+                      ),
+                    ),
+                  ),
+                  // Animated Red Laser Scan Line
+                  Container(
+                    width: 240,
+                    height: 2.5,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFF3333),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFFFF3333).withValues(alpha: 0.8),
+                          blurRadius: 10,
+                          spreadRadius: 2,
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Status Overlay
                   Positioned(
                     bottom: 12,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      color: Colors.black54,
-                      child: Text('Simulated Laser Sensor Ready', style: AppTextStyles.caption.copyWith(color: Colors.white)),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.7),
+                        borderRadius: BorderRadius.circular(100),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 6,
+                            height: 6,
+                            decoration: const BoxDecoration(
+                              color: Color(0xFF10B981),
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Optical Laser Engine Active • Ready for Input',
+                            style: AppTextStyles.caption.copyWith(color: Colors.white, fontSize: 11),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
+            const SizedBox(height: 18),
+            // Quick One-Click Demo Scanners
+            Text('Quick Demo Simulation:', style: AppTextStyles.labelSmall.copyWith(fontWeight: FontWeight.w700)),
+            const SizedBox(height: 6),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                ActionChip(
+                  label: const Text('Scan USB-C Hub (ELC-0042)'),
+                  avatar: const Icon(Icons.qr_code_rounded, size: 16),
+                  onPressed: () {
+                    lookupCtrl.text = '8901234567890';
+                  },
+                ),
+                ActionChip(
+                  label: const Text('Scan Office Chair (FUR-0012)'),
+                  avatar: const Icon(Icons.qr_code_rounded, size: 16),
+                  onPressed: () {
+                    lookupCtrl.text = '8901234567891';
+                  },
+                ),
+              ],
+            ),
             const SizedBox(height: 16),
-            const AppTextField(
-              label: 'Manual Barcode Entry / Scanner Input',
-              hint: 'Scan or type 13-digit barcode...',
+            AppTextField(
+              label: 'Manual Barcode Entry / Laser HID Input',
+              hint: 'Scan with handheld laser or type 13-digit code...',
+              controller: lookupCtrl,
               prefixIcon: Icons.keyboard_alt_outlined,
             ),
           ],
@@ -320,11 +413,19 @@ class _BarcodeManagementScreenState extends State<BarcodeManagementScreen> {
             onPressed: () => Navigator.pop(context),
           ),
           AppButton(
-            label: 'Lookup Item',
+            label: 'Lookup Product',
             prefixIcon: Icons.search_rounded,
             onPressed: () {
               Navigator.pop(context);
-              Get.snackbar('Product Found', 'USB-C Hub 7-in-1 [ELC-0042] in WH-Main A-01-02');
+              final code = lookupCtrl.text.trim();
+              Get.snackbar(
+                'Product Verified',
+                'Matched Code [$code] • Location: WH-Main (Dhaka), Zone A, Rack 02, Bin 14',
+                snackPosition: SnackPosition.TOP,
+                backgroundColor: AppColors.primary,
+                colorText: Colors.white,
+                duration: const Duration(seconds: 4),
+              );
             },
           ),
         ],

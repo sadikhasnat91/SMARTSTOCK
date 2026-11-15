@@ -52,37 +52,56 @@ class AppBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (bg, fg) = _colors();
+
     return Container(
       padding: EdgeInsets.symmetric(
-        horizontal: dot ? 8 : 10,
-        vertical: 3,
+        horizontal: dot ? 9 : 11,
+        vertical: 4,
       ),
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(100),
         border: Border.all(
-          color: fg.withValues(alpha: 0.2),
+          color: fg.withValues(alpha: 0.28),
           width: 1,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: fg.withValues(alpha: 0.08),
+            offset: const Offset(0, 1),
+            blurRadius: 3,
+          ),
+        ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           if (dot) ...[
             Container(
-              width: 6,
-              height: 6,
+              width: 6.5,
+              height: 6.5,
               decoration: BoxDecoration(
                 color: fg,
                 shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: fg.withValues(alpha: 0.6),
+                    blurRadius: 4,
+                  ),
+                ],
               ),
             ),
-            const SizedBox(width: 5),
+            const SizedBox(width: 5.5),
           ],
           Flexible(
             child: Text(
               label,
-              style: AppTextStyles.labelSmall.copyWith(color: fg, fontSize: 11),
+              style: AppTextStyles.labelSmall.copyWith(
+                color: fg,
+                fontSize: 11.5,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.1,
+              ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
@@ -104,4 +123,3 @@ class AppBadge extends StatelessWidget {
     };
   }
 }
-

@@ -20,56 +20,97 @@ class AppDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      insetPadding: const EdgeInsets.all(24),
-      child: SizedBox(
-        width: width ?? 520,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Title bar
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-              decoration: const BoxDecoration(
-                border: Border(bottom: BorderSide(color: AppColors.border)),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(title, style: AppTextStyles.h3),
-                  ),
-                  InkWell(
-                    onTap: () => Navigator.of(context).pop(),
-                    borderRadius: BorderRadius.circular(6),
-                    child: const Padding(
-                      padding: EdgeInsets.all(4),
-                      child: Icon(Icons.close_rounded, size: 20, color: AppColors.textMuted),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            // Content
-            SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: content,
-            ),
-            // Actions
-            if (actions != null)
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      child: Container(
+        width: width ?? 540,
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppColors.border, width: 1.2),
+          boxShadow: AppColors.shadow3DElevated,
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // 3D Title bar
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
                 decoration: const BoxDecoration(
-                  border: Border(top: BorderSide(color: AppColors.border)),
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Color(0xFFFCFDFD), Color(0xFFF6FAF8)],
+                  ),
+                  border: Border(bottom: BorderSide(color: AppColors.border, width: 1)),
                 ),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: actions!
-                      .expand((w) => [w, const SizedBox(width: 10)])
-                      .toList()
-                    ..removeLast(),
+                  children: [
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: const BoxDecoration(
+                        color: AppColors.primary,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.primary,
+                            blurRadius: 4,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: AppTextStyles.h3.copyWith(fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                    InkWell(
+                      onTap: () => Navigator.of(context).pop(),
+                      borderRadius: BorderRadius.circular(8),
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: AppColors.secondaryBackground,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(Icons.close_rounded, size: 18, color: AppColors.textSecondary),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-          ],
+              // Content
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: content,
+                ),
+              ),
+              // Actions
+              if (actions != null)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFFBFDFC),
+                    border: Border(top: BorderSide(color: AppColors.border, width: 1)),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: actions!
+                        .expand((w) => [w, const SizedBox(width: 10)])
+                        .toList()
+                      ..removeLast(),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -96,8 +137,11 @@ class ConfirmDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppDialog(
       title: title,
-      width: 420,
-      content: Text(message, style: AppTextStyles.bodyMedium),
+      width: 440,
+      content: Text(
+        message,
+        style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary, height: 1.5),
+      ),
       actions: [
         AppButton(
           label: 'Cancel',
@@ -135,29 +179,41 @@ class AppEmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(48),
+        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 60,
-              height: 60,
+              width: 72,
+              height: 72,
               decoration: BoxDecoration(
-                color: AppColors.secondaryBackground,
-                borderRadius: BorderRadius.circular(12),
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFFFFFFFF), Color(0xFFEFF5F2)],
+                ),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: AppColors.border, width: 1.5),
+                boxShadow: AppColors.shadow3DCard,
               ),
-              child: Icon(icon, size: 28, color: AppColors.textMuted),
+              child: Icon(icon, size: 34, color: AppColors.primary),
             ),
-            const SizedBox(height: 16),
-            Text(title, style: AppTextStyles.h4),
-            const SizedBox(height: 6),
+            const SizedBox(height: 18),
             Text(
-              message,
-              style: AppTextStyles.bodySmall,
-              textAlign: TextAlign.center,
+              title,
+              style: AppTextStyles.h3.copyWith(fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 8),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 380),
+              child: Text(
+                message,
+                style: AppTextStyles.bodySmall.copyWith(height: 1.5),
+                textAlign: TextAlign.center,
+              ),
             ),
             if (action != null) ...[
-              const SizedBox(height: 20),
+              const SizedBox(height: 22),
               action!,
             ],
           ],
@@ -177,12 +233,20 @@ class AppLoadingState extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const SizedBox(
-            width: 36,
-            height: 36,
-            child: CircularProgressIndicator(
-              strokeWidth: 2.5,
-              valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              shape: BoxShape.circle,
+              boxShadow: AppColors.shadow3DCard,
+            ),
+            child: const SizedBox(
+              width: 28,
+              height: 28,
+              child: CircularProgressIndicator(
+                strokeWidth: 2.8,
+                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+              ),
             ),
           ),
           if (message != null) ...[
@@ -215,11 +279,26 @@ class AppBreadcrumbs extends StatelessWidget {
         children: displayItems.asMap().entries.expand((e) {
           final isLast = e.key == displayItems.length - 1;
           return [
-            Text(
-              e.value,
-              style: isLast
-                  ? AppTextStyles.labelMedium.copyWith(color: AppColors.textPrimary)
-                  : AppTextStyles.caption.copyWith(color: AppColors.textMuted),
+            Container(
+              padding: EdgeInsets.symmetric(
+                horizontal: isLast ? 10 : 4,
+                vertical: isLast ? 4 : 2,
+              ),
+              decoration: isLast
+                  ? BoxDecoration(
+                      color: AppColors.primarySurface,
+                      borderRadius: BorderRadius.circular(6),
+                    )
+                  : null,
+              child: Text(
+                e.value,
+                style: isLast
+                    ? AppTextStyles.labelSmall.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w700,
+                      )
+                    : AppTextStyles.caption.copyWith(color: AppColors.textMuted),
+              ),
             ),
             if (!isLast)
               const Padding(
@@ -232,4 +311,3 @@ class AppBreadcrumbs extends StatelessWidget {
     );
   }
 }
-

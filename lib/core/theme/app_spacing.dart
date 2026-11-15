@@ -19,10 +19,12 @@ class AppSpacing {
   static const double tableCellPadding = 14;
 
   // Border radius
-  static const double radiusSm = 6;
-  static const double radiusMd = 8;
-  static const double radiusLg = 10;
-  static const double radiusXl = 14;
-  static const double radiusRound = 100;
+  static const double radiusXs = 4;
+  static const double radiusSm = 8;
+  static const double radiusMd = 12;
+  static const double radiusLg = 16;
+  static const double radiusXl = 20;
+  static const double radius2xl = 28;
+  static const double radiusRound = 999;
 }
 

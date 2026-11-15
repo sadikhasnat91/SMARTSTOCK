@@ -185,19 +185,35 @@ class WarehouseDetailScreen extends StatelessWidget {
                             children: [
                               Row(
                                 children: [
-                                  Text(wh['name'] as String, style: AppTextStyles.h2),
+                                  Flexible(
+                                    child: Text(
+                                      wh['name'] as String,
+                                      style: AppTextStyles.h2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
                                   const SizedBox(width: 12),
                                   AppBadge.fromStatus(wh['status'] as String),
                                 ],
                               ),
                               const SizedBox(height: 6),
-                              Text('${wh['code']} · ${wh['type']} Facility · Managed by ${wh['manager']}', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary)),
+                              Text(
+                                '${wh['code']} · ${wh['type']} Facility · Managed by ${wh['manager']}',
+                                style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
+                                overflow: TextOverflow.ellipsis,
+                              ),
                               const SizedBox(height: 4),
                               Row(
                                 children: [
                                   const Icon(Icons.location_on_outlined, size: 16, color: AppColors.textMuted),
                                   const SizedBox(width: 4),
-                                  Text(wh['address'] as String, style: AppTextStyles.caption),
+                                  Expanded(
+                                    child: Text(
+                                      wh['address'] as String,
+                                      style: AppTextStyles.caption,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
                                 ],
                               ),
                             ],

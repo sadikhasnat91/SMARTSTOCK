@@ -174,6 +174,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
                         ),
                         const SizedBox(width: 12),
                         _FilterDropdown(
+                          width: 150,
                           label: 'Category',
                           value: _filterCategory,
                           items: categories,
@@ -181,6 +182,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
                         ),
                         const SizedBox(width: 12),
                         _FilterDropdown(
+                          width: 150,
                           label: 'Status',
                           value: _filterStatus,
                           items: statuses,
@@ -373,12 +375,14 @@ class _FilterDropdown extends StatelessWidget {
   final String value;
   final List<String> items;
   final void Function(String?)? onChanged;
+  final double? width;
 
   const _FilterDropdown({
     required this.label,
     required this.value,
     required this.items,
     this.onChanged,
+    this.width,
   });
 
   @override
@@ -386,6 +390,7 @@ class _FilterDropdown extends StatelessWidget {
     return DropdownButtonHideUnderline(
       child: Container(
         height: 38,
+        width: width,
         padding: const EdgeInsets.symmetric(horizontal: 12),
         decoration: BoxDecoration(
           color: AppColors.surface,

@@ -5,6 +5,8 @@ import 'package:smart_stock/shared/widgets/navigation/app_sidebar.dart';
 import 'package:smart_stock/shared/widgets/navigation/app_topbar.dart';
 import 'package:smart_stock/shared/controllers/sidebar_controller.dart';
 import 'package:smart_stock/core/theme/app_colors.dart';
+import 'package:smart_stock/core/theme/app_text_styles.dart';
+import 'package:smart_stock/app/routes/app_routes.dart';
 
 class AppShell extends StatefulWidget {
   final Widget child;
@@ -82,26 +84,26 @@ class _AppShellState extends State<AppShell> {
                     child: Stack(
                       alignment: Alignment.center,
                       children: [
-                        // Subtle continuous divider border
+                        // Continuous divider line
                         Container(
                           width: 1,
                           height: double.infinity,
                           color: const Color(0xFF1E3028),
                         ),
-                        // Sleek grab handle pill indicator on hover/drag
+                        // Sleek glowing pill grab indicator on hover/drag
                         AnimatedOpacity(
                           duration: const Duration(milliseconds: 150),
                           opacity: (isHovering || isDragging) ? 1.0 : 0.0,
                           child: Container(
-                            width: 3,
+                            width: 3.5,
                             height: 48,
                             decoration: BoxDecoration(
-                              color: AppColors.primary,
+                              gradient: AppColors.primaryGradient,
                               borderRadius: BorderRadius.circular(2),
                               boxShadow: [
                                 BoxShadow(
-                                  color: AppColors.primary.withValues(alpha: 0.4),
-                                  blurRadius: 4,
+                                  color: AppColors.primary.withValues(alpha: 0.5),
+                                  blurRadius: 6,
                                 ),
                               ],
                             ),
@@ -135,14 +137,17 @@ class _AppShellState extends State<AppShell> {
   Widget _buildTablet() {
     return Scaffold(
       backgroundColor: AppColors.background,
-      drawer: Drawer(
+      drawer: const Drawer(
         width: 250,
         backgroundColor: Colors.transparent,
         child: AppSidebar(collapsed: false),
       ),
       appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(60),
-        child: AppTopbar(breadcrumbs: widget.breadcrumbs),
+        preferredSize: const Size.fromHeight(64),
+        child: AppTopbar(
+          breadcrumbs: widget.breadcrumbs,
+          actions: widget.topbarActions,
+        ),
       ),
       body: widget.child,
     );
@@ -152,16 +157,115 @@ class _AppShellState extends State<AppShell> {
     return Scaffold(
       backgroundColor: AppColors.background,
       drawer: const Drawer(
-        width: 260,
+        width: 270,
         backgroundColor: Colors.transparent,
         child: AppSidebar(collapsed: false),
       ),
       appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(60),
-        child: AppTopbar(breadcrumbs: widget.breadcrumbs),
+        preferredSize: const Size.fromHeight(64),
+        child: AppTopbar(
+          breadcrumbs: widget.breadcrumbs,
+          actions: widget.topbarActions,
+        ),
       ),
-      body: SafeArea(child: widget.child),
+      body: SafeArea(
+        child: widget.child,
+      ),
+      bottomNavigationBar: _buildMobileBottomBar(context),
+    );
+  }
+
+  Widget _buildMobileBottomBar(BuildContext context) {
+    final currentRoute = Get.currentRoute;
+
+    final tabs = [
+      (Icons.dashboard_rounded, 'Overview', AppRoutes.executiveDashboard),
+      (Icons.inventory_2_rounded, 'Inventory', AppRoutes.products),
+      (Icons.receipt_long_rounded, 'Orders', AppRoutes.salesOrders),
+      (Icons.auto_awesome_rounded, 'AI Intel', AppRoutes.intelligenceDashboard),
+    ];
+
+    return Builder(
+      builder: (scaffoldCtx) => Container(
+        height: 60,
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          border: const Border(top: BorderSide(color: AppColors.border, width: 1)),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF0F1F1A).withValues(alpha: 0.05),
+              offset: const Offset(0, -3),
+              blurRadius: 10,
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            ...tabs.map((tab) {
+              final isSelected = currentRoute == tab.$3;
+              return Expanded(
+                child: InkWell(
+                  onTap: () => Get.toNamed(tab.$3),
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          tab.$1,
+                          size: 20,
+                          color: isSelected ? AppColors.primary : AppColors.textMuted,
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          tab.$2,
+                          style: AppTextStyles.labelSmall.copyWith(
+                            fontSize: 10,
+                            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                            color: isSelected ? AppColors.primary : AppColors.textMuted,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }),
+            // Menu drawer button
+            Expanded(
+              child: InkWell(
+                onTap: () {
+                  Scaffold.of(scaffoldCtx).openDrawer();
+                },
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.menu_rounded,
+                        size: 20,
+                        color: AppColors.textMuted,
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        'Menu',
+                        style: AppTextStyles.labelSmall.copyWith(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.textMuted,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
-

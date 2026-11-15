@@ -18,7 +18,7 @@ class AppTopbar extends StatelessWidget implements PreferredSizeWidget {
   });
 
   @override
-  Size get preferredSize => const Size.fromHeight(60);
+  Size get preferredSize => const Size.fromHeight(64);
 
   @override
   Widget build(BuildContext context) {
@@ -27,10 +27,17 @@ class AppTopbar extends StatelessWidget implements PreferredSizeWidget {
     final isMobile = width < 600;
 
     return Container(
-      height: 60,
-      decoration: const BoxDecoration(
+      height: 64,
+      decoration: BoxDecoration(
         color: AppColors.surface,
-        border: Border(bottom: BorderSide(color: AppColors.border, width: 1)),
+        border: const Border(bottom: BorderSide(color: AppColors.border, width: 1)),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0F1F1A).withValues(alpha: 0.03),
+            offset: const Offset(0, 3),
+            blurRadius: 10,
+          ),
+        ],
       ),
       padding: EdgeInsets.symmetric(horizontal: isMobile ? 12 : 20),
       child: Row(
@@ -38,27 +45,62 @@ class AppTopbar extends StatelessWidget implements PreferredSizeWidget {
           // Drawer toggle button for Mobile and Tablet
           if (!isDesktop) ...[
             Builder(
-              builder: (ctx) => IconButton(
-                icon: const Icon(Icons.menu_rounded, color: AppColors.textPrimary, size: 22),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-                onPressed: () {
-                  Scaffold.of(ctx).openDrawer();
-                },
+              builder: (ctx) => Container(
+                margin: const EdgeInsets.only(right: 8),
+                decoration: BoxDecoration(
+                  color: AppColors.secondaryBackground,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: IconButton(
+                  icon: const Icon(Icons.menu_rounded, color: AppColors.textPrimary, size: 22),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 38, minHeight: 38),
+                  onPressed: () {
+                    Scaffold.of(ctx).openDrawer();
+                  },
+                ),
               ),
             ),
-            const SizedBox(width: 8),
           ],
           // Breadcrumbs
           Expanded(
             child: AppBreadcrumbs(items: breadcrumbs),
           ),
-          const SizedBox(width: 8),
-          // Global search on desktop only
+          const SizedBox(width: 12),
+          // Additional custom page actions
+          if (actions != null) ...[
+            ...actions!,
+            const SizedBox(width: 8),
+          ],
+          // Global search on desktop
           if (isDesktop) ...[
             SizedBox(
-              width: 240,
-              child: const AppSearchField(hint: 'Search anything...'),
+              width: 250,
+              child: Stack(
+                alignment: Alignment.centerRight,
+                children: [
+                  const AppSearchField(hint: 'Search anything...'),
+                  Positioned(
+                    right: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppColors.secondaryBackground,
+                        borderRadius: BorderRadius.circular(5),
+                        border: Border.all(color: AppColors.border, width: 1),
+                      ),
+                      child: Text(
+                        '⌘K',
+                        style: AppTextStyles.caption.copyWith(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textMuted,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
             const SizedBox(width: 12),
           ] else ...[
@@ -69,9 +111,41 @@ class AppTopbar extends StatelessWidget implements PreferredSizeWidget {
             ),
             const SizedBox(width: 4),
           ],
+          // AI Assistant Quick Pill
+          if (isDesktop) ...[
+            InkWell(
+              onTap: () => Get.toNamed(AppRoutes.aiAssistant),
+              borderRadius: BorderRadius.circular(10),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFEBF7F2), Color(0xFFDEF2EB)],
+                  ),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.primary.withValues(alpha: 0.25), width: 1),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.auto_awesome_rounded, size: 15, color: AppColors.primary),
+                    const SizedBox(width: 5),
+                    Text(
+                      'AI Assistant',
+                      style: AppTextStyles.labelSmall.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+          ],
           // Notifications
           _NotificationButton(),
-          const SizedBox(width: 4),
+          const SizedBox(width: 8),
           // Profile menu
           _ProfileMenu(compact: isMobile),
         ],
@@ -88,12 +162,14 @@ class _NotificationButton extends StatelessWidget {
       children: [
         InkWell(
           onTap: () => Get.toNamed(AppRoutes.notifications),
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(10),
           child: Container(
-            width: 36,
-            height: 36,
+            width: 38,
+            height: 38,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
+              color: AppColors.secondaryBackground,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: AppColors.border, width: 1),
             ),
             child: const Icon(
               Icons.notifications_outlined,
@@ -108,9 +184,15 @@ class _NotificationButton extends StatelessWidget {
           child: Container(
             width: 8,
             height: 8,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: AppColors.danger,
               shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.danger.withValues(alpha: 0.6),
+                  blurRadius: 4,
+                ),
+              ],
             ),
           ),
         ),
@@ -126,22 +208,43 @@ class _ProfileMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PopupMenuButton<String>(
-      offset: const Offset(0, 44),
+      offset: const Offset(0, 48),
+      elevation: 6,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: compact ? 6 : 8, vertical: 4),
+        padding: EdgeInsets.symmetric(horizontal: compact ? 6 : 10, vertical: 5),
         decoration: BoxDecoration(
-          border: Border.all(color: AppColors.border, width: 1),
-          borderRadius: BorderRadius.circular(8),
+          color: AppColors.surface,
+          border: Border.all(color: AppColors.border, width: 1.2),
+          borderRadius: BorderRadius.circular(10),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              offset: const Offset(0, 2),
+              blurRadius: 4,
+            ),
+          ],
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            CircleAvatar(
-              radius: 14,
-              backgroundColor: AppColors.primary,
-              child: Text(
-                'AR',
-                style: AppTextStyles.labelSmall.copyWith(color: Colors.white, fontSize: 11),
+            Container(
+              padding: const EdgeInsets.all(1.5),
+              decoration: const BoxDecoration(
+                gradient: AppColors.primaryGradient,
+                shape: BoxShape.circle,
+              ),
+              child: CircleAvatar(
+                radius: 14,
+                backgroundColor: AppColors.surface,
+                child: Text(
+                  'SH',
+                  style: AppTextStyles.labelSmall.copyWith(
+                    color: AppColors.primary,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               ),
             ),
             if (!compact) ...[
@@ -150,11 +253,23 @@ class _ProfileMenu extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Ahmed Rahman', style: AppTextStyles.labelSmall.copyWith(fontSize: 12)),
-                  Text('Warehouse Manager', style: AppTextStyles.caption.copyWith(fontSize: 10)),
+                  Text(
+                    'Sadik Hasnat',
+                    style: AppTextStyles.labelSmall.copyWith(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12,
+                    ),
+                  ),
+                  Text(
+                    'Admin',
+                    style: AppTextStyles.caption.copyWith(
+                      color: AppColors.textMuted,
+                      fontSize: 10,
+                    ),
+                  ),
                 ],
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 6),
               const Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: AppColors.textMuted),
             ],
           ],
@@ -171,14 +286,20 @@ class _ProfileMenu extends StatelessWidget {
             children: [
               const Icon(Icons.logout_rounded, size: 16, color: AppColors.danger),
               const SizedBox(width: 10),
-              Text('Sign Out', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.danger)),
+              Text(
+                'Sign Out',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.danger,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ],
           ),
         ),
       ],
       onSelected: (value) {
         if (value == 'logout') {
-          Get.toNamed(AppRoutes.login);
+          Get.offAllNamed(AppRoutes.login);
         } else {
           Get.toNamed(value);
         }
@@ -199,4 +320,3 @@ class _ProfileMenu extends StatelessWidget {
     );
   }
 }
-

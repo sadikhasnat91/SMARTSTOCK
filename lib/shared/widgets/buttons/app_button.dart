@@ -4,7 +4,7 @@ import 'package:smart_stock/core/theme/app_text_styles.dart';
 
 enum AppButtonVariant { primary, secondary, outline, ghost, danger }
 
-class AppButton extends StatelessWidget {
+class AppButton extends StatefulWidget {
   final String label;
   final VoidCallback? onPressed;
   final AppButtonVariant variant;
@@ -27,81 +27,178 @@ class AppButton extends StatelessWidget {
   });
 
   @override
+  State<AppButton> createState() => _AppButtonState();
+}
+
+class _AppButtonState extends State<AppButton> {
+  bool _isHovered = false;
+  bool _isPressed = false;
+
+  @override
   Widget build(BuildContext context) {
-    final (bg, fg, border) = _colors();
-    final child = Row(
-      mainAxisSize: expanded ? MainAxisSize.max : MainAxisSize.min,
+    final isEnabled = widget.onPressed != null && !widget.loading;
+    final (bgGradient, bgColor, fgColor, border, shadows) = _buttonStyling();
+
+    final content = Row(
+      mainAxisSize: widget.expanded ? MainAxisSize.max : MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        if (loading)
+        if (widget.loading)
           SizedBox(
             width: 16,
             height: 16,
             child: CircularProgressIndicator(
-              strokeWidth: 2,
-              valueColor: AlwaysStoppedAnimation<Color>(fg),
+              strokeWidth: 2.2,
+              valueColor: AlwaysStoppedAnimation<Color>(fgColor),
             ),
           )
         else ...[
-          if (prefixIcon != null) ...[
-            Icon(prefixIcon, size: 16, color: fg),
-            const SizedBox(width: 7),
+          if (widget.prefixIcon != null) ...[
+            Icon(widget.prefixIcon, size: 16, color: fgColor),
+            const SizedBox(width: 8),
           ],
           Flexible(
             child: Text(
-              label,
-              style: AppTextStyles.labelLarge.copyWith(color: fg),
+              widget.label,
+              style: AppTextStyles.labelLarge.copyWith(
+                color: fgColor,
+                fontWeight: FontWeight.w600,
+                letterSpacing: -0.1,
+              ),
               overflow: TextOverflow.ellipsis,
               maxLines: 1,
             ),
           ),
-          if (suffixIcon != null) ...[
-            const SizedBox(width: 7),
-            Icon(suffixIcon, size: 16, color: fg),
+          if (widget.suffixIcon != null) ...[
+            const SizedBox(width: 8),
+            Icon(widget.suffixIcon, size: 16, color: fgColor),
           ],
         ],
       ],
     );
 
     return SizedBox(
-      height: height ?? 38,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: loading ? null : onPressed,
-          borderRadius: BorderRadius.circular(8),
+      height: widget.height ?? 40,
+      child: MouseRegion(
+        onEnter: (_) => isEnabled ? setState(() => _isHovered = true) : null,
+        onExit: (_) => isEnabled ? setState(() => _isHovered = false) : null,
+        cursor: isEnabled ? SystemMouseCursors.click : SystemMouseCursors.basic,
+        child: GestureDetector(
+          onTapDown: (_) => isEnabled ? setState(() => _isPressed = true) : null,
+          onTapUp: (_) => isEnabled ? setState(() => _isPressed = false) : null,
+          onTapCancel: () => isEnabled ? setState(() => _isPressed = false) : null,
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 150),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
-            decoration: BoxDecoration(
-              color: bg,
-              borderRadius: BorderRadius.circular(8),
-              border: border != null ? Border.all(color: border, width: 1) : null,
+            duration: const Duration(milliseconds: 140),
+            curve: Curves.easeOutCubic,
+            transform: Matrix4.translationValues(
+              0,
+              _isPressed ? 1.5 : (_isHovered ? -1.5 : 0),
+              0,
             ),
-            child: child,
+            decoration: BoxDecoration(
+              gradient: bgGradient,
+              color: bgGradient == null ? bgColor : null,
+              borderRadius: BorderRadius.circular(10),
+              border: border,
+              boxShadow: _isPressed
+                  ? [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        offset: const Offset(0, 1),
+                        blurRadius: 2,
+                      ),
+                    ]
+                  : (_isHovered
+                      ? (shadows?.map((s) => BoxShadow(
+                            color: s.color.withValues(alpha: (s.color.a * 1.3).clamp(0.0, 1.0)),
+                            offset: Offset(s.offset.dx, s.offset.dy + 2),
+                            blurRadius: s.blurRadius + 4,
+                            spreadRadius: s.spreadRadius,
+                          )).toList() ?? [])
+                      : shadows),
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: isEnabled ? widget.onPressed : null,
+                borderRadius: BorderRadius.circular(10),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: content,
+                ),
+              ),
+            ),
           ),
         ),
       ),
     );
   }
 
-  (Color, Color, Color?) _colors() {
-    return switch (variant) {
-      AppButtonVariant.primary => (AppColors.primary, Colors.white, null),
-      AppButtonVariant.secondary => (AppColors.primarySurface, AppColors.primary, AppColors.primarySurface),
-      AppButtonVariant.outline => (Colors.white, AppColors.textPrimary, AppColors.border),
-      AppButtonVariant.ghost => (Colors.transparent, AppColors.textSecondary, null),
-      AppButtonVariant.danger => (AppColors.dangerSurface, AppColors.danger, AppColors.dangerSurface),
-    };
+  (Gradient?, Color?, Color, Border?, List<BoxShadow>?) _buttonStyling() {
+    switch (widget.variant) {
+      case AppButtonVariant.primary:
+        return (
+          _isHovered ? AppColors.primaryGradientElevated : AppColors.primaryGradient,
+          null,
+          Colors.white,
+          Border.all(
+            color: Colors.white.withValues(alpha: 0.25),
+            width: 1,
+          ),
+          AppColors.shadow3DButton,
+        );
+      case AppButtonVariant.secondary:
+        return (
+          null,
+          _isHovered ? const Color(0xFFD8EFE5) : AppColors.primarySurface,
+          AppColors.primary,
+          Border.all(
+            color: AppColors.primary.withValues(alpha: 0.25),
+            width: 1,
+          ),
+          AppColors.shadow3DSubtle,
+        );
+      case AppButtonVariant.outline:
+        return (
+          null,
+          _isHovered ? const Color(0xFFF9FBFA) : Colors.white,
+          AppColors.textPrimary,
+          Border.all(
+            color: _isHovered ? AppColors.primary : AppColors.border,
+            width: 1.2,
+          ),
+          AppColors.shadow3DSubtle,
+        );
+      case AppButtonVariant.ghost:
+        return (
+          null,
+          _isHovered ? AppColors.secondaryBackground : Colors.transparent,
+          AppColors.textSecondary,
+          null,
+          null,
+        );
+      case AppButtonVariant.danger:
+        return (
+          null,
+          _isHovered ? const Color(0xFFFCDADA) : AppColors.dangerSurface,
+          AppColors.danger,
+          Border.all(
+            color: AppColors.danger.withValues(alpha: 0.3),
+            width: 1,
+          ),
+          AppColors.shadow3DSubtle,
+        );
+    }
   }
 }
 
-class AppIconButton extends StatelessWidget {
+class AppIconButton extends StatefulWidget {
   final IconData icon;
   final VoidCallback? onPressed;
   final String? tooltip;
   final Color? color;
   final bool active;
+  final double size;
 
   const AppIconButton({
     super.key,
@@ -110,34 +207,57 @@ class AppIconButton extends StatelessWidget {
     this.tooltip,
     this.color,
     this.active = false,
+    this.size = 36,
   });
 
   @override
+  State<AppIconButton> createState() => _AppIconButtonState();
+}
+
+class _AppIconButtonState extends State<AppIconButton> {
+  bool _isHovered = false;
+
+  @override
   Widget build(BuildContext context) {
-    final btn = Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onPressed,
-        borderRadius: BorderRadius.circular(8),
-        child: Container(
-          width: 34,
-          height: 34,
-          decoration: BoxDecoration(
-            color: active ? AppColors.primarySurface : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(
-            icon,
-            size: 18,
-            color: active ? AppColors.primary : (color ?? AppColors.textSecondary),
+    final active = widget.active;
+    final iconColor = active
+        ? AppColors.primary
+        : (widget.color ?? (_isHovered ? AppColors.textPrimary : AppColors.textSecondary));
+
+    final btn = MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        width: widget.size,
+        height: widget.size,
+        decoration: BoxDecoration(
+          color: active
+              ? AppColors.primarySurface
+              : (_isHovered ? AppColors.secondaryBackground : Colors.transparent),
+          borderRadius: BorderRadius.circular(10),
+          border: active
+              ? Border.all(color: AppColors.primary.withValues(alpha: 0.3), width: 1)
+              : (_isHovered ? Border.all(color: AppColors.border, width: 1) : null),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: widget.onPressed,
+            borderRadius: BorderRadius.circular(10),
+            child: Icon(
+              widget.icon,
+              size: widget.size * 0.52,
+              color: iconColor,
+            ),
           ),
         ),
       ),
     );
-    if (tooltip != null) {
-      return Tooltip(message: tooltip!, child: btn);
+
+    if (widget.tooltip != null) {
+      return Tooltip(message: widget.tooltip!, child: btn);
     }
     return btn;
   }
 }
-
