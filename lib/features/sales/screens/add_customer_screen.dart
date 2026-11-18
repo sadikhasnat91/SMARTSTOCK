@@ -7,6 +7,8 @@ import '../../../core/responsive/responsive_layout.dart';
 import '../../../shared/layouts/app_shell.dart';
 import '../../../shared/widgets/buttons/app_button.dart';
 import '../../../shared/widgets/inputs/app_text_field.dart';
+import '../../../shared/controllers/order_controller.dart';
+import '../../../data/models/customer_model.dart';
 
 class AddCustomerScreen extends StatefulWidget {
   const AddCustomerScreen({super.key});
@@ -212,14 +214,20 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
 
   void _save() {
     if (_formKey.currentState!.validate()) {
-      Get.snackbar(
-        'Account Registered',
-        'Customer ${_nameCtrl.text} added to sales directory.',
-        backgroundColor: AppColors.success,
-        colorText: Colors.white,
-        snackPosition: SnackPosition.BOTTOM,
+      final customer = CustomerModel(
+        id: 'CUST-${DateTime.now().millisecondsSinceEpoch}',
+        name: _nameCtrl.text.trim(),
+        contact: _contactCtrl.text.trim(),
+        email: _emailCtrl.text.trim(),
+        phone: _phoneCtrl.text.trim(),
+        country: 'Bangladesh',
+        type: _type ?? 'Enterprise',
+        creditLimit: '\$${_creditCtrl.text.trim()}',
+        status: 'Active',
       );
-      Get.back();
+      Get.find<OrderController>().addCustomer(customer).then((ok) {
+        if (ok) Get.back();
+      });
     }
   }
 

@@ -7,6 +7,8 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../shared/layouts/app_shell.dart';
 import '../../../shared/widgets/buttons/app_button.dart';
 import '../../../shared/widgets/inputs/app_text_field.dart';
+import '../../../shared/controllers/supplier_controller.dart';
+import '../../../data/models/supplier_model.dart';
 
 class AddSupplierScreen extends StatefulWidget {
   const AddSupplierScreen({super.key});
@@ -250,14 +252,20 @@ class _AddSupplierScreenState extends State<AddSupplierScreen> {
 
   void _save() {
     if (_formKey.currentState!.validate()) {
-      Get.snackbar(
-        'Supplier Enrolled',
-        'Vendor ${_nameCtrl.text} added to procurement directory.',
-        backgroundColor: AppColors.success,
-        colorText: Colors.white,
-        snackPosition: SnackPosition.BOTTOM,
+      final supplier = SupplierModel(
+        id: 'SUP-${DateTime.now().millisecondsSinceEpoch}',
+        name: _nameCtrl.text.trim(),
+        contact: _contactCtrl.text.trim(),
+        email: _emailCtrl.text.trim(),
+        phone: _phoneCtrl.text.trim(),
+        country: _countryCtrl.text.trim().isEmpty ? 'Bangladesh' : _countryCtrl.text.trim(),
+        category: _category ?? 'Electronics',
+        paymentTerms: _terms ?? 'Net 30',
+        status: 'Active',
       );
-      Get.back();
+      Get.find<SupplierController>().addSupplier(supplier).then((ok) {
+        if (ok) Get.back();
+      });
     }
   }
 

@@ -6,6 +6,9 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../shared/layouts/app_shell.dart';
 import '../../../shared/widgets/badges/app_badge.dart';
 import '../../../shared/widgets/buttons/app_button.dart';
+import '../../../shared/widgets/inputs/app_text_field.dart';
+import '../../../shared/controllers/settings_controller.dart';
+import '../../../core/config/supabase_config.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -20,8 +23,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _soundAlerts = true;
   bool _barcodeLaser = true;
 
+  late final TextEditingController _urlCtrl;
+  late final TextEditingController _keyCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _urlCtrl = TextEditingController(text: SupabaseConfig.currentUrl);
+    _keyCtrl = TextEditingController(text: SupabaseConfig.currentAnonKey);
+  }
+
+  @override
+  void dispose() {
+    _urlCtrl.dispose();
+    _keyCtrl.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final settingsCtrl = Get.find<SettingsController>();
+
     return AppShell(
       breadcrumbs: const ['Administration', 'Platform Settings'],
       child: SingleChildScrollView(
@@ -40,7 +62,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   children: [
                     Text('Enterprise Platform Configuration', style: AppTextStyles.h1),
                     const SizedBox(height: 4),
-                    Text('System valuation principles, automated reorder triggers, offline sync rules, and scanner peripherals', style: AppTextStyles.bodySmall),
+                    Text('System valuation principles, automated reorder triggers, Supabase cloud sync, and scanner peripherals', style: AppTextStyles.bodySmall),
                   ],
                 ),
                 AppButton(
@@ -53,6 +75,120 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ],
             ),
             const SizedBox(height: 24),
+
+            // Supabase Database Connection Card
+            Obx(() {
+              final isOnline = settingsCtrl.isConnected;
+              return Material(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(10),
+                child: Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: isOnline ? AppColors.success.withValues(alpha: 0.6) : AppColors.primary.withValues(alpha: 0.4),
+                      width: 1.5,
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Wrap(
+                        alignment: WrapAlignment.spaceBetween,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 12,
+                        runSpacing: 10,
+                        children: [
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: (isOnline ? AppColors.success : AppColors.primary).withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Icon(
+                                  Icons.cloud_sync_rounded,
+                                  color: isOnline ? AppColors.success : AppColors.primary,
+                                  size: 24,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Flexible(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('Supabase PostgreSQL Cloud Backend', style: AppTextStyles.h3, overflow: TextOverflow.ellipsis),
+                                    Text(
+                                      isOnline ? 'Online — Connected to live PostgreSQL database' : 'Ready — Local Reactive Store (Offline Viva Mode)',
+                                      style: AppTextStyles.caption.copyWith(
+                                        color: isOnline ? AppColors.success : AppColors.textSecondary,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          AppBadge(
+                            label: isOnline ? 'Online (PostgreSQL)' : 'Offline / Viva Ready',
+                            variant: isOnline ? AppBadgeVariant.success : AppBadgeVariant.warning,
+                            dot: true,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      Text('Row Level Security (RLS) is active. Client operations authenticate with public anon key.', style: AppTextStyles.bodySmall),
+                      const SizedBox(height: 16),
+                      AppTextField(
+                        label: 'Supabase Project URL',
+                        hint: 'https://your-project.supabase.co',
+                        controller: _urlCtrl,
+                        prefixIcon: Icons.link_rounded,
+                      ),
+                      const SizedBox(height: 14),
+                      AppTextField(
+                        label: 'Supabase Anon Public Key',
+                        hint: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+                        controller: _keyCtrl,
+                        prefixIcon: Icons.key_rounded,
+                      ),
+                      const SizedBox(height: 16),
+                      Wrap(
+                        spacing: 12,
+                        runSpacing: 10,
+                        children: [
+                          AppButton(
+                            label: 'Connect & Verify Database',
+                            prefixIcon: Icons.sync_rounded,
+                            onPressed: () {
+                              settingsCtrl.updateSupabaseConfig(
+                                _urlCtrl.text.trim(),
+                                _keyCtrl.text.trim(),
+                              );
+                            },
+                          ),
+                          AppButton(
+                            label: 'Reset to Demo Mode',
+                            variant: AppButtonVariant.ghost,
+                            onPressed: () {
+                              _urlCtrl.text = 'https://demo-smartstock.supabase.co';
+                              _keyCtrl.text = 'demo-anon-key';
+                              settingsCtrl.updateSupabaseConfig(_urlCtrl.text, _keyCtrl.text);
+                            },
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }),
+
+            const SizedBox(height: 20),
             Material(
               color: AppColors.surface,
               borderRadius: BorderRadius.circular(10),

@@ -11,93 +11,102 @@ import '../../../data/mock/mock_products.dart';
 import '../../../app/routes/app_routes.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../../data/mock/mock_dashboard.dart';
-
+import '../../../shared/controllers/dashboard_controller.dart';
 class InventoryDashboardScreen extends StatelessWidget {
   const InventoryDashboardScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     final isDesktop = MediaQuery.of(context).size.width >= 1024;
+    final dashboardCtrl = Get.find<DashboardController>();
 
     return AppShell(
       breadcrumbs: const ['SmartStock', 'Inventory Dashboard'],
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.contentPadding),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Wrap(
-              alignment: WrapAlignment.spaceBetween,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              spacing: 12,
-              runSpacing: 12,
-              children: [
-                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text('Inventory Dashboard', style: AppTextStyles.h1),
-                  const SizedBox(height: 4),
-                  Text('Real-time inventory health and analytics', style: AppTextStyles.bodySmall),
-                ]),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
+      child: Obx(() {
+        final totalProds = dashboardCtrl.totalProductsCount;
+        final lowStock = dashboardCtrl.lowStockCount;
+        final outStock = dashboardCtrl.outOfStockCount;
+        final inStock = totalProds - lowStock - outStock;
+        final invVal = dashboardCtrl.totalInventoryValue;
+
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(AppSpacing.contentPadding),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 12,
+                runSpacing: 12,
+                children: [
+                  Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text('Inventory Dashboard', style: AppTextStyles.h1),
+                    const SizedBox(height: 4),
+                    Text('Real-time inventory health and analytics', style: AppTextStyles.bodySmall),
+                  ]),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      AppButton(
+                        label: 'Adjust Stock',
+                        variant: AppButtonVariant.outline,
+                        prefixIcon: Icons.tune_outlined,
+                        onPressed: () => Get.toNamed(AppRoutes.stockAdjustment),
+                      ),
+                      AppButton(
+                        label: 'Add Product',
+                        prefixIcon: Icons.add_rounded,
+                        onPressed: () => Get.toNamed(AppRoutes.productAdd),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              // Stats horizontal scroll on mobile / row on desktop
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                child: Row(
                   children: [
-                    AppButton(
-                      label: 'Adjust Stock',
-                      variant: AppButtonVariant.outline,
-                      prefixIcon: Icons.tune_outlined,
-                      onPressed: () => Get.toNamed(AppRoutes.stockAdjustment),
-                    ),
-                    AppButton(
-                      label: 'Add Product',
-                      prefixIcon: Icons.add_rounded,
-                      onPressed: () => Get.toNamed(AppRoutes.productAdd),
-                    ),
+                    SizedBox(width: isDesktop ? 220 : 180, child: _StatTile(label: 'Total Products', value: '$totalProds', icon: Icons.category_outlined, color: AppColors.primary)),
+                    const SizedBox(width: 14),
+                    SizedBox(width: isDesktop ? 220 : 180, child: _StatTile(label: 'In Stock', value: '$inStock', icon: Icons.check_circle_outline, color: AppColors.success)),
+                    const SizedBox(width: 14),
+                    SizedBox(width: isDesktop ? 220 : 180, child: _StatTile(label: 'Low Stock', value: '$lowStock', icon: Icons.warning_amber_outlined, color: AppColors.warning)),
+                    const SizedBox(width: 14),
+                    SizedBox(width: isDesktop ? 220 : 180, child: _StatTile(label: 'Out of Stock', value: '$outStock', icon: Icons.error_outline, color: AppColors.danger)),
+                    const SizedBox(width: 14),
+                    SizedBox(width: isDesktop ? 220 : 180, child: _StatTile(label: 'Total Value', value: '\$${invVal > 1000 ? "${(invVal / 1000).toStringAsFixed(1)}K" : invVal.toStringAsFixed(0)}', icon: Icons.monetization_on_outlined, color: AppColors.info)),
                   ],
                 ),
-              ],
-            ),
-            const SizedBox(height: 24),
-            // Stats horizontal scroll on mobile / row on desktop
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              physics: const BouncingScrollPhysics(),
-              child: Row(
-                children: [
-                  SizedBox(width: isDesktop ? 220 : 180, child: const _StatTile(label: 'Total Products', value: '130', icon: Icons.category_outlined, color: AppColors.primary)),
-                  const SizedBox(width: 14),
-                  SizedBox(width: isDesktop ? 220 : 180, child: const _StatTile(label: 'In Stock', value: '104', icon: Icons.check_circle_outline, color: AppColors.success)),
-                  const SizedBox(width: 14),
-                  SizedBox(width: isDesktop ? 220 : 180, child: const _StatTile(label: 'Low Stock', value: '18', icon: Icons.warning_amber_outlined, color: AppColors.warning)),
-                  const SizedBox(width: 14),
-                  SizedBox(width: isDesktop ? 220 : 180, child: const _StatTile(label: 'Out of Stock', value: '8', icon: Icons.error_outline, color: AppColors.danger)),
-                  const SizedBox(width: 14),
-                  SizedBox(width: isDesktop ? 220 : 180, child: const _StatTile(label: 'Total Value', value: '\$1.24M', icon: Icons.monetization_on_outlined, color: AppColors.info)),
-                ],
               ),
-            ),
-            const SizedBox(height: 24),
-            if (isDesktop)
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(flex: 3, child: _buildStockByCategory()),
-                  const SizedBox(width: 20),
-                  Expanded(flex: 2, child: _buildTopProducts()),
-                ],
-              )
-            else
-              Column(
-                children: [
-                  _buildStockByCategory(),
-                  const SizedBox(height: 20),
-                  _buildTopProducts(),
-                ],
-              ),
-            const SizedBox(height: 24),
-            _buildRecentMovementsTable(),
-          ],
-        ),
-      ),
+              const SizedBox(height: 24),
+              if (isDesktop)
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(flex: 3, child: _buildStockByCategory()),
+                    const SizedBox(width: 20),
+                    Expanded(flex: 2, child: _buildTopProducts()),
+                  ],
+                )
+              else
+                Column(
+                  children: [
+                    _buildStockByCategory(),
+                    const SizedBox(height: 20),
+                    _buildTopProducts(),
+                  ],
+                ),
+              const SizedBox(height: 24),
+              _buildRecentMovementsTable(),
+            ],
+          ),
+        );
+      }),
     );
   }
 

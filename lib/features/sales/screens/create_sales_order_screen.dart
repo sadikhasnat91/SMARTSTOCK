@@ -8,6 +8,8 @@ import '../../../shared/layouts/app_shell.dart';
 import '../../../shared/widgets/buttons/app_button.dart';
 import '../../../shared/widgets/inputs/app_text_field.dart';
 import '../../../data/mock/mock_orders.dart';
+import '../../../shared/controllers/order_controller.dart';
+import '../../../data/models/sales_order_model.dart';
 
 class CreateSalesOrderScreen extends StatefulWidget {
   const CreateSalesOrderScreen({super.key});
@@ -185,16 +187,27 @@ class _CreateSalesOrderScreenState extends State<CreateSalesOrderScreen> {
     );
   }
 
-  void _submit() {
+  void _submit() async {
     if (_formKey.currentState!.validate()) {
-      Get.snackbar(
-        'Sales Order Created',
-        'SO-2024-0892 confirmed. Stock reserved at $_warehouse.',
-        backgroundColor: AppColors.success,
-        colorText: Colors.white,
-        snackPosition: SnackPosition.BOTTOM,
+      final orderCtrl = Get.find<OrderController>();
+      final cleanVal = _totalCtrl.text.replaceAll('\$', '').replaceAll(',', '').trim();
+      final parsedTotal = double.tryParse(cleanVal) ?? 4200.0;
+
+      final newOrder = SalesOrderModel(
+        id: 'SO-${DateTime.now().year}-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}',
+        customer: _customer ?? 'Apex Corporation',
+        date: _reqDateCtrl.text.trim().isNotEmpty ? _reqDateCtrl.text.trim() : DateTime.now().toString().split(' ')[0],
+        totalAmount: parsedTotal,
+        status: 'Confirmed',
+        paymentStatus: 'Paid',
+        warehouse: _warehouse ?? 'WH-Main',
+        itemsCount: 3,
       );
-      Get.back();
+
+      final success = await orderCtrl.createSalesOrder(newOrder);
+      if (success) {
+        Get.back();
+      }
     }
   }
 

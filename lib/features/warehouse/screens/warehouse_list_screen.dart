@@ -8,28 +8,16 @@ import '../../../shared/layouts/app_shell.dart';
 import '../../../shared/widgets/badges/app_badge.dart';
 import '../../../shared/widgets/buttons/app_button.dart';
 import '../../../shared/widgets/inputs/app_text_field.dart';
-import '../../../data/mock/mock_warehouses.dart';
+import '../../../shared/controllers/warehouse_controller.dart';
+import '../../../data/models/warehouse_model.dart';
 import '../../../app/routes/app_routes.dart';
 
-class WarehouseListScreen extends StatefulWidget {
+class WarehouseListScreen extends StatelessWidget {
   const WarehouseListScreen({super.key});
 
   @override
-  State<WarehouseListScreen> createState() => _WarehouseListScreenState();
-}
-
-class _WarehouseListScreenState extends State<WarehouseListScreen> {
-  final _searchCtrl = TextEditingController();
-  List<Map<String, dynamic>> _warehouses = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _warehouses = MockWarehouses.warehouses;
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final ctrl = Get.find<WarehouseController>();
     final isDesktop = ResponsiveLayout.isDesktop(context);
 
     return AppShell(
@@ -75,40 +63,59 @@ class _WarehouseListScreenState extends State<WarehouseListScreen> {
             const SizedBox(height: 24),
             AppSearchField(
               hint: 'Search warehouses by name, location, or facility code...',
-              controller: _searchCtrl,
-              onChanged: (q) {
-                setState(() {
-                  _warehouses = MockWarehouses.warehouses.where((w) {
-                    return (w['name'] as String).toLowerCase().contains(q.toLowerCase()) ||
-                        (w['code'] as String).toLowerCase().contains(q.toLowerCase()) ||
-                        (w['address'] as String).toLowerCase().contains(q.toLowerCase());
-                  }).toList();
-                });
-              },
+              onChanged: (q) => ctrl.searchQuery.value = q,
             ),
             const SizedBox(height: 20),
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: _warehouses.length,
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: isDesktop ? 2 : 1,
-                crossAxisSpacing: 20,
-                mainAxisSpacing: 20,
-                childAspectRatio: isDesktop ? 1.65 : 1.35,
-              ),
-              itemBuilder: (context, idx) {
-                final wh = _warehouses[idx];
-                return _buildWarehouseCard(wh);
-              },
-            ),
+            Obx(() {
+              if (ctrl.isLoading.value) {
+                return const Center(child: Padding(
+                  padding: EdgeInsets.all(40),
+                  child: CircularProgressIndicator(),
+                ));
+              }
+              final warehouses = ctrl.filteredWarehouses;
+              if (warehouses.isEmpty) {
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(40),
+                    child: Column(
+                      children: [
+                        const Icon(Icons.warehouse_outlined, size: 48, color: AppColors.textMuted),
+                        const SizedBox(height: 12),
+                        Text('No warehouses found', style: AppTextStyles.h4),
+                        const SizedBox(height: 8),
+                        AppButton(
+                          label: 'Add Warehouse',
+                          prefixIcon: Icons.add_business_rounded,
+                          onPressed: () => Get.toNamed(AppRoutes.warehouseAdd),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+              return GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: warehouses.length,
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: isDesktop ? 2 : 1,
+                  crossAxisSpacing: 20,
+                  mainAxisSpacing: 20,
+                  childAspectRatio: isDesktop ? 1.65 : 1.35,
+                ),
+                itemBuilder: (context, idx) {
+                  return _buildWarehouseCard(warehouses[idx]);
+                },
+              );
+            }),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildWarehouseCard(Map<String, dynamic> wh) {
+  Widget _buildWarehouseCard(WarehouseModel wh) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -135,12 +142,12 @@ class _WarehouseListScreenState extends State<WarehouseListScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(wh['name'] as String, style: AppTextStyles.h3, overflow: TextOverflow.ellipsis),
-                    Text('${wh['code']} · ${wh['type']}', style: AppTextStyles.caption),
+                    Text(wh.name, style: AppTextStyles.h3, overflow: TextOverflow.ellipsis),
+                    Text('${wh.code} · ${wh.type}', style: AppTextStyles.caption),
                   ],
                 ),
               ),
-              AppBadge.fromStatus(wh['status'] as String),
+              AppBadge.fromStatus(wh.status),
             ],
           ),
           const SizedBox(height: 16),
@@ -148,7 +155,7 @@ class _WarehouseListScreenState extends State<WarehouseListScreen> {
             children: [
               const Icon(Icons.location_on_outlined, size: 16, color: AppColors.textMuted),
               const SizedBox(width: 6),
-              Expanded(child: Text(wh['address'] as String, style: AppTextStyles.bodySmall, overflow: TextOverflow.ellipsis)),
+              Expanded(child: Text(wh.address, style: AppTextStyles.bodySmall, overflow: TextOverflow.ellipsis)),
             ],
           ),
           const SizedBox(height: 8),
@@ -157,12 +164,12 @@ class _WarehouseListScreenState extends State<WarehouseListScreen> {
               const Icon(Icons.person_outline_rounded, size: 16, color: AppColors.textMuted),
               const SizedBox(width: 6),
               Expanded(
-                child: Text('Manager: ${wh['manager']}', style: AppTextStyles.bodySmall, overflow: TextOverflow.ellipsis),
+                child: Text('Manager: ${wh.manager}', style: AppTextStyles.bodySmall, overflow: TextOverflow.ellipsis),
               ),
               const SizedBox(width: 8),
               const Icon(Icons.phone_outlined, size: 16, color: AppColors.textMuted),
               const SizedBox(width: 4),
-              Text(wh['phone'] as String, style: AppTextStyles.caption),
+              Text(wh.phone, style: AppTextStyles.caption),
             ],
           ),
           const Spacer(),
@@ -173,13 +180,13 @@ class _WarehouseListScreenState extends State<WarehouseListScreen> {
             physics: const BouncingScrollPhysics(),
             child: Row(
               children: [
-                _metric('Zones', '${wh['zones']}'),
+                _metric('Zones', '${wh.zones}'),
                 const SizedBox(width: 20),
-                _metric('Locations', '${wh['locations']}'),
+                _metric('Locations', '${wh.locations}'),
                 const SizedBox(width: 20),
-                _metric('SKUs Hosted', '${wh['products']}'),
+                _metric('SKUs Hosted', '${wh.products}'),
                 const SizedBox(width: 20),
-                _metric('Capacity', wh['capacity'] as String),
+                _metric('Capacity', wh.capacity),
                 const SizedBox(width: 20),
                 AppButton(
                   label: 'Manage',
@@ -204,11 +211,4 @@ class _WarehouseListScreenState extends State<WarehouseListScreen> {
       ],
     );
   }
-
-  @override
-  void dispose() {
-    _searchCtrl.dispose();
-    super.dispose();
-  }
 }
-

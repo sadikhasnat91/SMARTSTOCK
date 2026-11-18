@@ -8,6 +8,8 @@ import '../../../shared/layouts/app_shell.dart';
 import '../../../shared/widgets/buttons/app_button.dart';
 import '../../../shared/widgets/inputs/app_text_field.dart';
 import '../../../data/mock/mock_products.dart';
+import '../../../shared/controllers/transfer_controller.dart';
+import '../../../data/models/stock_transfer_model.dart';
 
 class CreateTransferScreen extends StatefulWidget {
   const CreateTransferScreen({super.key});
@@ -201,16 +203,24 @@ class _CreateTransferScreenState extends State<CreateTransferScreen> {
     );
   }
 
-  void _submit() {
+  void _submit() async {
     if (_formKey.currentState!.validate()) {
-      Get.snackbar(
-        'Transfer Order Created',
-        'Transfer TRF-0094 queued from $_from to $_to.',
-        backgroundColor: AppColors.success,
-        colorText: Colors.white,
-        snackPosition: SnackPosition.BOTTOM,
+      final transferCtrl = Get.find<TransferController>();
+      final newTransfer = StockTransferModel(
+        id: 'TRF-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}',
+        source: _from ?? 'WH-Main',
+        destination: _to ?? 'WH-East',
+        date: DateTime.now().toString().split(' ')[0],
+        itemsCount: int.tryParse(_qtyCtrl.text.trim()) ?? 1,
+        status: 'In Transit',
+        trackingNumber: 'TRK-${DateTime.now().millisecondsSinceEpoch.toString().substring(6)}',
+        initiatedBy: 'Ahmed Rahman (Logistics)',
       );
-      Get.back();
+
+      final success = await transferCtrl.createTransfer(newTransfer);
+      if (success) {
+        Get.back();
+      }
     }
   }
 

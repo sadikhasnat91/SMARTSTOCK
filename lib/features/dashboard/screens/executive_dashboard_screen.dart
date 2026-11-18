@@ -11,6 +11,8 @@ import '../../../shared/widgets/badges/app_badge.dart';
 import '../../../shared/widgets/buttons/app_button.dart';
 import '../../../data/mock/mock_dashboard.dart';
 import '../../../app/routes/app_routes.dart';
+import '../../../shared/controllers/dashboard_controller.dart';
+import '../../../shared/controllers/product_controller.dart';
 
 class ExecutiveDashboardScreen extends StatelessWidget {
   const ExecutiveDashboardScreen({super.key});
@@ -19,10 +21,12 @@ class ExecutiveDashboardScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppShell(
       breadcrumbs: const ['SmartStock', 'Executive Dashboard'],
-      child: ResponsiveLayout(
-        desktop: _buildDesktop(context),
-        mobile: _buildMobile(context),
-      ),
+      child: Obx(() {
+        return ResponsiveLayout(
+          desktop: _buildDesktop(context),
+          mobile: _buildMobile(context),
+        );
+      }),
     );
   }
 
@@ -225,23 +229,9 @@ class ExecutiveDashboardScreen extends StatelessWidget {
   Widget _buildKpiGrid(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
     final isTablet = width < 1100;
-    final cards = MockDashboardData.kpiCards;
-    final iconMap = {
-      'trending_up': Icons.trending_up_rounded,
-      'shopping_bag': Icons.shopping_bag_outlined,
-      'inventory_2': Icons.inventory_2_outlined,
-      'warning_amber': Icons.warning_amber_outlined,
-      'local_shipping': Icons.local_shipping_outlined,
-      'check_circle': Icons.check_circle_outline,
-    };
-    final colorMap = {
-      'trending_up': AppColors.success,
-      'shopping_bag': AppColors.info,
-      'inventory_2': AppColors.primary,
-      'warning_amber': AppColors.warning,
-      'local_shipping': AppColors.textSecondary,
-      'check_circle': AppColors.success,
-    };
+    final dashboardCtrl = Get.find<DashboardController>();
+    final cards = dashboardCtrl.executiveKpiCards;
+
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -255,13 +245,13 @@ class ExecutiveDashboardScreen extends StatelessWidget {
       itemBuilder: (context, i) {
         final c = cards[i];
         return KpiCard(
-          label: c['label'] as String,
+          label: c['title'] as String,
           value: c['value'] as String,
           change: c['change'] as String?,
-          changePositive: c['changePositive'] as bool?,
-          sub: c['sub'] as String?,
-          icon: iconMap[c['icon']] ?? Icons.insights,
-          iconColor: colorMap[c['icon']],
+          changePositive: c['isPositive'] as bool?,
+          sub: c['subtitle'] as String?,
+          icon: c['icon'] as IconData,
+          iconColor: c['color'] as Color,
           onTap: () => _handleKpiTap(i),
         );
       },
@@ -269,19 +259,9 @@ class ExecutiveDashboardScreen extends StatelessWidget {
   }
 
   Widget _buildKpiGridMobile(BuildContext context) {
-    final cards = MockDashboardData.kpiCards.take(4).toList();
-    final iconMap = {
-      'trending_up': Icons.trending_up_rounded,
-      'shopping_bag': Icons.shopping_bag_outlined,
-      'inventory_2': Icons.inventory_2_outlined,
-      'warning_amber': Icons.warning_amber_outlined,
-    };
-    final colorMap = {
-      'trending_up': AppColors.success,
-      'shopping_bag': AppColors.info,
-      'inventory_2': AppColors.primary,
-      'warning_amber': AppColors.warning,
-    };
+    final dashboardCtrl = Get.find<DashboardController>();
+    final cards = dashboardCtrl.executiveKpiCards;
+
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -295,18 +275,18 @@ class ExecutiveDashboardScreen extends StatelessWidget {
       itemBuilder: (context, i) {
         final c = cards[i];
         return KpiCard(
-          label: c['label'] as String,
+          label: c['title'] as String,
           value: c['value'] as String,
           change: c['change'] as String?,
-          changePositive: c['changePositive'] as bool?,
-          icon: iconMap[c['icon']] ?? Icons.insights,
-          iconColor: colorMap[c['icon']],
+          changePositive: c['isPositive'] as bool?,
+          sub: c['subtitle'] as String?,
+          icon: c['icon'] as IconData,
+          iconColor: c['color'] as Color,
           onTap: () => _handleKpiTap(i),
         );
       },
     );
   }
-
   void _handleKpiTap(int index) {
     switch (index) {
       case 0:
@@ -509,7 +489,19 @@ class ExecutiveDashboardScreen extends StatelessWidget {
   }
 
   Widget _buildLowStockAlerts() {
-    final alerts = MockDashboardData.lowStockAlerts;
+    final productCtrl = Get.find<ProductController>();
+    final alerts = productCtrl.products
+        .where((p) => p.stock <= p.minStock)
+        .take(5)
+        .map((p) => {
+          'name': p.name,
+          'sku': p.sku,
+          'stock': p.stock,
+          'minStock': p.minStock,
+          'warehouse': p.warehouse,
+        })
+        .toList();
+
     return SectionCard(
       title: 'Low Stock Alerts',
       titleTrailing: Wrap(
@@ -519,7 +511,7 @@ class ExecutiveDashboardScreen extends StatelessWidget {
         children: [
           AppBadge(
             label: '${alerts.length} critical',
-            variant: AppBadgeVariant.warning,
+            variant: alerts.isEmpty ? AppBadgeVariant.success : AppBadgeVariant.warning,
             dot: true,
           ),
           AppButton(
@@ -530,9 +522,16 @@ class ExecutiveDashboardScreen extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(
-        children: alerts.map((a) => _LowStockRow(alert: a)).toList(),
-      ),
+      child: alerts.isEmpty
+          ? const Padding(
+              padding: EdgeInsets.all(20),
+              child: Center(
+                child: Text('All inventory items are currently above healthy stock thresholds!'),
+              ),
+            )
+          : Column(
+              children: alerts.map((a) => _LowStockRow(alert: a)).toList(),
+            ),
     );
   }
 

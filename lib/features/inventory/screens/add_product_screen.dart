@@ -7,6 +7,10 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../shared/layouts/app_shell.dart';
 import '../../../shared/widgets/buttons/app_button.dart';
 import '../../../shared/widgets/inputs/app_text_field.dart';
+import '../../../shared/widgets/dialogs/app_dialog.dart';
+import '../../../shared/controllers/product_controller.dart';
+import '../../../data/models/product_model.dart';
+import '../../../app/routes/app_routes.dart';
 
 class AddProductScreen extends StatefulWidget {
   const AddProductScreen({super.key});
@@ -22,19 +26,87 @@ class _AddProductScreenState extends State<AddProductScreen> {
   final _descCtrl = TextEditingController();
   final _costCtrl = TextEditingController();
   final _sellCtrl = TextEditingController();
-  final _minStockCtrl = TextEditingController();
-  final _maxStockCtrl = TextEditingController();
-  String? _selectedCategory;
-  String? _selectedUnit;
-  String? _selectedWarehouse;
+  final _initialStockCtrl = TextEditingController(text: '10');
+  final _minStockCtrl = TextEditingController(text: '5');
+  final _maxStockCtrl = TextEditingController(text: '100');
+  final _barcodeCtrl = TextEditingController();
+  String? _selectedCategory = 'Electronics';
+  String? _selectedUnit = 'PCS';
+  String? _selectedWarehouse = 'WH-Main';
+  bool _isEditing = false;
+  String? _editingId;
 
   final _categories = ['Electronics', 'Office Supplies', 'Furniture', 'Packaging', 'Tools'];
   final _units = ['PCS', 'REAM', 'SET', 'ROLL', 'KG', 'L', 'BOX'];
   final _warehouses = ['WH-Main', 'WH-East', 'WH-West', 'WH-Cold'];
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initFromArgs();
+    });
+  }
+
+  void _initFromArgs() {
+    final args = Get.arguments;
+    if (args != null) {
+      ProductModel? model;
+      if (args is ProductModel) {
+        model = args;
+      } else if (args is Map<String, dynamic>) {
+        model = ProductModel.fromJson(args);
+      }
+      if (model != null) {
+        setState(() {
+          _isEditing = true;
+          _editingId = model!.id;
+          _nameCtrl.text = model.name;
+          _skuCtrl.text = model.sku;
+          _brandCtrl.text = model.brand;
+          _descCtrl.text = model.description;
+          _costCtrl.text = model.costPrice.toString();
+          _sellCtrl.text = model.sellingPrice.toString();
+          _initialStockCtrl.text = model.stock.toString();
+          _minStockCtrl.text = model.minStock.toString();
+          _maxStockCtrl.text = model.maxStock.toString();
+          _barcodeCtrl.text = model.barcode;
+          if (_categories.contains(model.category)) {
+            _selectedCategory = model.category;
+          }
+          if (_units.contains(model.unit)) {
+            _selectedUnit = model.unit;
+          }
+          if (_warehouses.contains(model.warehouse)) {
+            _selectedWarehouse = model.warehouse;
+          }
+        });
+      }
+    }
+  }
+
+  void _clearForm() {
+    _nameCtrl.clear();
+    _skuCtrl.clear();
+    _brandCtrl.clear();
+    _descCtrl.clear();
+    _costCtrl.clear();
+    _sellCtrl.clear();
+    _initialStockCtrl.text = '10';
+    _minStockCtrl.text = '5';
+    _maxStockCtrl.text = '100';
+    _barcodeCtrl.clear();
+    setState(() {
+      _selectedCategory = 'Electronics';
+      _selectedUnit = 'PCS';
+      _selectedWarehouse = 'WH-Main';
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final isDesktop = ResponsiveLayout.isDesktop(context);
+    final productCtrl = Get.find<ProductController>();
 
     final leftContent = [
       _buildSection('Basic Information', [
@@ -88,32 +160,19 @@ class _AddProductScreenState extends State<AddProductScreen> {
           const SizedBox(width: 14),
           Expanded(child: AppTextField(label: 'Max Stock Level', hint: '0', controller: _maxStockCtrl, keyboardType: TextInputType.number)),
         ]),
+        if (!_isEditing) ...[
+          const SizedBox(height: 14),
+          AppTextField(label: 'Initial Stock', hint: '0', controller: _initialStockCtrl, keyboardType: TextInputType.number),
+        ],
       ]),
       const SizedBox(height: 16),
-      _buildSection('Product Image', [
-        Container(
-          height: 160,
-          decoration: BoxDecoration(
-            color: AppColors.secondaryBackground,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: AppColors.border, style: BorderStyle.solid),
-          ),
-          child: Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
-            const Icon(Icons.cloud_upload_outlined, size: 36, color: AppColors.textMuted),
-            const SizedBox(height: 8),
-            Text('Click to upload image', style: AppTextStyles.bodySmall),
-            Text('PNG, JPG up to 5MB', style: AppTextStyles.caption),
-          ])),
-        ),
-      ]),
-      const SizedBox(height: 16),
-      _buildSection('Barcode', [
-        AppTextField(label: 'Barcode / EAN', hint: 'Scan or enter barcode', prefixIcon: Icons.qr_code_scanner),
+      _buildSection('Barcode & Identification', [
+        AppTextField(label: 'Barcode (EAN-13 / Code-128)', hint: 'Leave blank to auto-generate', controller: _barcodeCtrl),
       ]),
     ];
 
     return AppShell(
-      breadcrumbs: const ['Inventory', 'Products', 'Add Product'],
+      breadcrumbs: ['Inventory', 'Products', _isEditing ? 'Edit Product' : 'Add Product'],
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(AppSpacing.contentPadding),
         child: Form(
@@ -125,26 +184,26 @@ class _AddProductScreenState extends State<AddProductScreen> {
               spacing: 12,
               runSpacing: 12,
               children: [
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    AppIconButton(
-                      icon: Icons.arrow_back_rounded,
-                      tooltip: 'Back',
-                      onPressed: () => Get.back(),
-                    ),
-                    const SizedBox(width: 8),
-                    Flexible(
-                      child: Text('Add New Product', style: AppTextStyles.h2, overflow: TextOverflow.ellipsis),
-                    ),
-                  ],
-                ),
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text(_isEditing ? 'Edit Product' : 'New Product Registration', style: AppTextStyles.h1),
+                  const SizedBox(height: 4),
+                  Text(_isEditing ? 'Update catalog details, pricing, and reorder levels' : 'Configure catalog attributes, SKU categorization, pricing, and stock limits', style: AppTextStyles.bodySmall),
+                ]),
                 Wrap(
                   spacing: 10,
                   runSpacing: 10,
                   children: [
-                    AppButton(label: 'Save as Draft', variant: AppButtonVariant.outline, onPressed: () {}),
-                    AppButton(label: 'Create Product', prefixIcon: Icons.check_rounded, onPressed: _submit),
+                    AppButton(
+                      label: 'Cancel',
+                      variant: AppButtonVariant.outline,
+                      onPressed: () => Get.back(),
+                    ),
+                    Obx(() => AppButton(
+                      label: _isEditing ? 'Save Changes' : 'Create Product',
+                      prefixIcon: _isEditing ? Icons.save_outlined : Icons.check_circle_outline,
+                      loading: productCtrl.isSubmitting.value,
+                      onPressed: productCtrl.isSubmitting.value ? null : _submit,
+                    )),
                   ],
                 ),
               ],
@@ -189,26 +248,125 @@ class _AddProductScreenState extends State<AddProductScreen> {
     );
   }
 
-  void _submit() {
+  void _submit() async {
     if (_formKey.currentState!.validate()) {
-      Get.snackbar(
-        'Product Created',
-        'Product has been added to inventory',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: AppColors.success,
-        colorText: Colors.white,
-        duration: const Duration(seconds: 3),
+      final productCtrl = Get.find<ProductController>();
+      final prodId = _isEditing && _editingId != null
+          ? _editingId!
+          : 'PRD-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}';
+
+      final newProduct = ProductModel(
+        id: prodId,
+        sku: _skuCtrl.text.trim().toUpperCase(),
+        name: _nameCtrl.text.trim(),
+        brand: _brandCtrl.text.trim(),
+        category: _selectedCategory ?? 'Electronics',
+        unit: _selectedUnit ?? 'PCS',
+        description: _descCtrl.text.trim(),
+        costPrice: double.tryParse(_costCtrl.text.trim()) ?? 0.0,
+        sellingPrice: double.tryParse(_sellCtrl.text.trim()) ?? 0.0,
+        stock: int.tryParse(_initialStockCtrl.text.trim()) ?? 10,
+        minStock: int.tryParse(_minStockCtrl.text.trim()) ?? 5,
+        maxStock: int.tryParse(_maxStockCtrl.text.trim()) ?? 100,
+        warehouse: _selectedWarehouse ?? 'WH-Main',
+        barcode: _barcodeCtrl.text.trim().isNotEmpty
+            ? _barcodeCtrl.text.trim()
+            : '890${DateTime.now().millisecondsSinceEpoch.toString().substring(3)}',
       );
-      Get.back();
+
+      final success = _isEditing
+          ? await productCtrl.updateProduct(newProduct)
+          : await productCtrl.addProduct(newProduct);
+
+      if (success) {
+        // Clear all form input fields completely
+        _clearForm();
+
+        // Show confirmation success dialog box
+        if (mounted) {
+          _showSuccessDialog(newProduct.name, newProduct.sku);
+        }
+      }
     }
+  }
+
+  void _showSuccessDialog(String productName, String sku) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AppDialog(
+        title: _isEditing ? 'Product Updated' : 'Product Saved Successfully',
+        content: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  color: AppColors.success.withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.check_circle_rounded, color: AppColors.success, size: 36),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                productName,
+                style: AppTextStyles.h3,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'SKU: $sku',
+                style: AppTextStyles.mono.copyWith(color: AppColors.textMuted),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                _isEditing
+                    ? 'The product details have been successfully updated in the database.'
+                    : 'The product has been permanently saved to Supabase PostgreSQL database.',
+                style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          AppButton(
+            label: 'Add Another Product',
+            variant: AppButtonVariant.outline,
+            onPressed: () {
+              Navigator.of(ctx).pop();
+            },
+          ),
+          AppButton(
+            label: 'View Product List',
+            prefixIcon: Icons.list_alt_rounded,
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              Get.offNamed(AppRoutes.products);
+            },
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   void dispose() {
-    _nameCtrl.dispose(); _skuCtrl.dispose(); _brandCtrl.dispose();
-    _descCtrl.dispose(); _costCtrl.dispose(); _sellCtrl.dispose();
-    _minStockCtrl.dispose(); _maxStockCtrl.dispose();
+    _nameCtrl.dispose();
+    _skuCtrl.dispose();
+    _brandCtrl.dispose();
+    _descCtrl.dispose();
+    _costCtrl.dispose();
+    _sellCtrl.dispose();
+    _initialStockCtrl.dispose();
+    _minStockCtrl.dispose();
+    _maxStockCtrl.dispose();
+    _barcodeCtrl.dispose();
     super.dispose();
   }
 }
-

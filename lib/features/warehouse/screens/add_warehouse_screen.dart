@@ -7,6 +7,8 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../shared/layouts/app_shell.dart';
 import '../../../shared/widgets/buttons/app_button.dart';
 import '../../../shared/widgets/inputs/app_text_field.dart';
+import '../../../shared/controllers/warehouse_controller.dart';
+import '../../../data/models/warehouse_model.dart';
 
 class AddWarehouseScreen extends StatefulWidget {
   const AddWarehouseScreen({super.key});
@@ -224,14 +226,20 @@ class _AddWarehouseScreenState extends State<AddWarehouseScreen> {
 
   void _save() {
     if (_formKey.currentState!.validate()) {
-      Get.snackbar(
-        'Warehouse Registered',
-        'Facility ${_nameCtrl.text} [${_codeCtrl.text}] successfully initialized.',
-        backgroundColor: AppColors.success,
-        colorText: Colors.white,
-        snackPosition: SnackPosition.BOTTOM,
+      final warehouse = WarehouseModel(
+        id: 'WH-${DateTime.now().millisecondsSinceEpoch}',
+        code: _codeCtrl.text.trim(),
+        name: _nameCtrl.text.trim(),
+        type: _selectedType ?? 'Distribution',
+        address: _addressCtrl.text.trim(),
+        manager: _managerCtrl.text.trim(),
+        phone: _phoneCtrl.text.trim(),
+        totalArea: _areaCtrl.text.trim().isEmpty ? '0 m²' : '${_areaCtrl.text.trim()} m²',
+        status: 'Active',
       );
-      Get.back();
+      Get.find<WarehouseController>().addWarehouse(warehouse).then((ok) {
+        if (ok) Get.back();
+      });
     }
   }
 

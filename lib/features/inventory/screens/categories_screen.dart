@@ -8,7 +8,8 @@ import '../../../shared/widgets/badges/app_badge.dart';
 import '../../../shared/widgets/buttons/app_button.dart';
 import '../../../shared/widgets/inputs/app_text_field.dart';
 import '../../../shared/widgets/dialogs/app_dialog.dart';
-import '../../../data/mock/mock_products.dart';
+import '../../../shared/controllers/product_controller.dart';
+import '../../../data/models/category_model.dart';
 
 class CategoriesScreen extends StatefulWidget {
   const CategoriesScreen({super.key});
@@ -18,16 +19,11 @@ class CategoriesScreen extends StatefulWidget {
 
 class _CategoriesScreenState extends State<CategoriesScreen> {
   final _searchCtrl = TextEditingController();
-  List<Map<String, dynamic>> _filtered = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _filtered = MockProducts.categories;
-  }
 
   @override
   Widget build(BuildContext context) {
+    final prodCtrl = Get.find<ProductController>();
+
     return AppShell(
       breadcrumbs: const ['Inventory', 'Categories'],
       child: SingleChildScrollView(
@@ -39,31 +35,38 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
             spacing: 12,
             runSpacing: 12,
             children: [
-              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Obx(() => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text('Categories', style: AppTextStyles.h1),
                 const SizedBox(height: 4),
-                Text('${MockProducts.categories.length} categories configured', style: AppTextStyles.bodySmall),
-              ]),
-              AppButton(label: 'Add Category', prefixIcon: Icons.add_rounded, onPressed: () => _showAddDialog(context)),
+                Text('${prodCtrl.categories.length} categories configured', style: AppTextStyles.bodySmall),
+              ])),
+              AppButton(label: 'Add Category', prefixIcon: Icons.add_rounded, onPressed: () => _showAddDialog(context, prodCtrl)),
             ],
           ),
           const SizedBox(height: 24),
           // Stats row
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            physics: const BouncingScrollPhysics(),
-            child: Row(
-              children: [
-                SizedBox(width: 170, child: _CatStat(label: 'Total Categories', value: '${MockProducts.categories.length}', icon: Icons.label_outline)),
-                const SizedBox(width: 12),
-                SizedBox(width: 170, child: _CatStat(label: 'Active', value: '${MockProducts.categories.where((c) => c['status'] == 'Active').length}', icon: Icons.check_circle_outline, color: AppColors.success)),
-                const SizedBox(width: 12),
-                SizedBox(width: 170, child: _CatStat(label: 'Inactive', value: '${MockProducts.categories.where((c) => c['status'] == 'Inactive').length}', icon: Icons.pause_circle_outline, color: AppColors.textMuted)),
-                const SizedBox(width: 12),
-                SizedBox(width: 170, child: _CatStat(label: 'Total Products', value: '${MockProducts.categories.fold(0, (s, c) => s + (c['products'] as int))}', icon: Icons.inventory_2_outlined)),
-              ],
-            ),
-          ),
+          Obx(() {
+            final cats = prodCtrl.categories;
+            final activeCount = cats.where((c) => c.status == 'Active').length;
+            final inactiveCount = cats.where((c) => c.status != 'Active').length;
+            final totalProds = cats.fold(0, (s, c) => s + c.productCount);
+
+            return SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              child: Row(
+                children: [
+                  SizedBox(width: 170, child: _CatStat(label: 'Total Categories', value: '${cats.length}', icon: Icons.label_outline)),
+                  const SizedBox(width: 12),
+                  SizedBox(width: 170, child: _CatStat(label: 'Active', value: '$activeCount', icon: Icons.check_circle_outline, color: AppColors.success)),
+                  const SizedBox(width: 12),
+                  SizedBox(width: 170, child: _CatStat(label: 'Inactive', value: '$inactiveCount', icon: Icons.pause_circle_outline, color: AppColors.textMuted)),
+                  const SizedBox(width: 12),
+                  SizedBox(width: 170, child: _CatStat(label: 'Total Products', value: '$totalProds', icon: Icons.inventory_2_outlined)),
+                ],
+              ),
+            );
+          }),
           const SizedBox(height: 24),
           Container(
             decoration: BoxDecoration(
@@ -78,65 +81,77 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                 child: AppSearchField(
                   hint: 'Search categories...',
                   controller: _searchCtrl,
-                  onChanged: (q) => setState(() {
-                    _filtered = MockProducts.categories.where((c) => (c['name'] as String).toLowerCase().contains(q.toLowerCase())).toList();
-                  }),
+                  onChanged: (_) => setState(() {}),
                 ),
               ),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                physics: const BouncingScrollPhysics(),
-                child: SizedBox(
-                  width: 700,
-                  child: Column(
-                    children: [
-                      // Header
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                        color: AppColors.secondaryBackground,
-                        child: Row(children: [
-                          Expanded(flex: 3, child: Text('Category Name', style: AppTextStyles.labelSmall)),
-                          Expanded(flex: 1, child: Text('Products', style: AppTextStyles.labelSmall)),
-                          Expanded(flex: 2, child: Text('Inventory Value', style: AppTextStyles.labelSmall)),
-                          Expanded(flex: 1, child: Text('Status', style: AppTextStyles.labelSmall)),
-                          SizedBox(width: 80, child: Text('Actions', style: AppTextStyles.labelSmall)),
-                        ]),
-                      ),
-                      ..._filtered.asMap().entries.map((e) {
-                        final cat = e.value;
-                        return InkWell(
-                          hoverColor: AppColors.primarySurface.withValues(alpha: 0.3),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                            decoration: BoxDecoration(
-                              color: e.key.isOdd ? const Color(0xFFFAFCFB) : AppColors.surface,
-                              border: const Border(bottom: BorderSide(color: AppColors.divider, width: 1)),
-                            ),
-                            child: Row(children: [
-                              Expanded(flex: 3, child: Row(children: [
-                                Container(
-                                  width: 36, height: 36,
-                                  decoration: BoxDecoration(color: AppColors.primarySurface, borderRadius: BorderRadius.circular(8)),
-                                  child: const Icon(Icons.label_outline, size: 18, color: AppColors.primary),
+              Obx(() {
+                final q = _searchCtrl.text.trim().toLowerCase();
+                var list = prodCtrl.categories.toList();
+                if (q.isNotEmpty) {
+                  list = list.where((c) => c.name.toLowerCase().contains(q)).toList();
+                }
+
+                return SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  physics: const BouncingScrollPhysics(),
+                  child: SizedBox(
+                    width: 700,
+                    child: Column(
+                      children: [
+                        // Header
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                          color: AppColors.secondaryBackground,
+                          child: Row(children: [
+                            Expanded(flex: 3, child: Text('Category Name', style: AppTextStyles.labelSmall)),
+                            Expanded(flex: 1, child: Text('Products', style: AppTextStyles.labelSmall)),
+                            Expanded(flex: 2, child: Text('Inventory Value', style: AppTextStyles.labelSmall)),
+                            Expanded(flex: 1, child: Text('Status', style: AppTextStyles.labelSmall)),
+                            SizedBox(width: 80, child: Text('Actions', style: AppTextStyles.labelSmall)),
+                          ]),
+                        ),
+                        if (list.isEmpty)
+                          Padding(
+                            padding: const EdgeInsets.all(32),
+                            child: Text('No categories found', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textMuted)),
+                          )
+                        else
+                          ...list.asMap().entries.map((e) {
+                            final cat = e.value;
+                            return InkWell(
+                              hoverColor: AppColors.primarySurface.withValues(alpha: 0.3),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                                decoration: BoxDecoration(
+                                  color: e.key.isOdd ? const Color(0xFFFAFCFB) : AppColors.surface,
+                                  border: const Border(bottom: BorderSide(color: AppColors.divider, width: 1)),
                                 ),
-                                const SizedBox(width: 12),
-                                Expanded(child: Text(cat['name'] as String, style: AppTextStyles.labelLarge, overflow: TextOverflow.ellipsis)),
-                              ])),
-                              Expanded(flex: 1, child: Text('${cat['products']} items', style: AppTextStyles.bodyMedium)),
-                              Expanded(flex: 2, child: Text(cat['value'] as String, style: AppTextStyles.labelSmall.copyWith(color: AppColors.primary))),
-                              Expanded(flex: 1, child: AppBadge.fromStatus(cat['status'] as String)),
-                              SizedBox(width: 80, child: Row(children: [
-                                AppIconButton(icon: Icons.edit_outlined, tooltip: 'Edit', onPressed: () {}),
-                                AppIconButton(icon: Icons.more_vert_rounded, tooltip: 'More', onPressed: () {}),
-                              ])),
-                            ]),
-                          ),
-                        );
-                      }),
-                    ],
+                                child: Row(children: [
+                                  Expanded(flex: 3, child: Row(children: [
+                                    Container(
+                                      width: 36, height: 36,
+                                      decoration: BoxDecoration(color: AppColors.primarySurface, borderRadius: BorderRadius.circular(8)),
+                                      child: const Icon(Icons.label_outline, size: 18, color: AppColors.primary),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(child: Text(cat.name, style: AppTextStyles.labelLarge, overflow: TextOverflow.ellipsis)),
+                                  ])),
+                                  Expanded(flex: 1, child: Text('${cat.productCount} items', style: AppTextStyles.bodyMedium)),
+                                  Expanded(flex: 2, child: Text('\$${cat.totalValue.toStringAsFixed(2)}', style: AppTextStyles.labelSmall.copyWith(color: AppColors.primary))),
+                                  Expanded(flex: 1, child: AppBadge.fromStatus(cat.status)),
+                                  SizedBox(width: 80, child: Row(children: [
+                                    AppIconButton(icon: Icons.edit_outlined, tooltip: 'Edit', onPressed: () {}),
+                                    AppIconButton(icon: Icons.more_vert_rounded, tooltip: 'More', onPressed: () {}),
+                                  ])),
+                                ]),
+                              ),
+                            );
+                          }),
+                      ],
+                    ),
                   ),
-                ),
-              ),
+                );
+              }),
             ]),
           ),
         ]),
@@ -144,7 +159,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     );
   }
 
-  void _showAddDialog(BuildContext context) {
+  void _showAddDialog(BuildContext context, ProductController prodCtrl) {
     final ctrl = TextEditingController();
     showDialog(
       context: context,
@@ -154,8 +169,10 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
         actions: [
           AppButton(label: 'Cancel', variant: AppButtonVariant.outline, onPressed: () => Navigator.pop(context)),
           AppButton(label: 'Create', onPressed: () {
-            Navigator.pop(context);
-            Get.snackbar('Category Created', '${ctrl.text} has been added', snackPosition: SnackPosition.BOTTOM, backgroundColor: AppColors.success, colorText: Colors.white);
+            if (ctrl.text.trim().isNotEmpty) {
+              prodCtrl.addCategory(name: ctrl.text.trim(), description: 'General category');
+              Navigator.pop(context);
+            }
           }),
         ],
       ),
@@ -191,4 +208,3 @@ class _CatStat extends StatelessWidget {
     );
   }
 }
-

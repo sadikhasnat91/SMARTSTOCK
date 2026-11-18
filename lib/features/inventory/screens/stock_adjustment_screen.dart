@@ -7,7 +7,7 @@ import '../../../core/theme/app_spacing.dart';
 import '../../../shared/layouts/app_shell.dart';
 import '../../../shared/widgets/buttons/app_button.dart';
 import '../../../shared/widgets/inputs/app_text_field.dart';
-import '../../../data/mock/mock_products.dart';
+import '../../../shared/controllers/product_controller.dart';
 
 class StockAdjustmentScreen extends StatefulWidget {
   const StockAdjustmentScreen({super.key});
@@ -29,8 +29,13 @@ class _StockAdjustmentScreenState extends State<StockAdjustmentScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final prod = MockProducts.products.firstWhere((p) => p['sku'] == _selectedProduct, orElse: () => MockProducts.products.first);
-    final currentStock = prod['stock'] as int;
+    final productCtrl = Get.find<ProductController>();
+    final products = productCtrl.products;
+    final prod = products.firstWhere(
+      (p) => p.sku == _selectedProduct,
+      orElse: () => products.first,
+    );
+    final currentStock = prod.stock;
     final isDesktop = ResponsiveLayout.isDesktop(context);
     final isMobile = ResponsiveLayout.isMobile(context);
 
@@ -86,9 +91,9 @@ class _StockAdjustmentScreenState extends State<StockAdjustmentScreen> {
           AppDropdownField<String>(
             label: 'Select Product / SKU *',
             value: _selectedProduct,
-            items: MockProducts.products.map((p) => DropdownMenuItem(
-              value: p['sku'] as String,
-              child: Text('${p['sku']} - ${p['name']} (OnHand: ${p['stock']})', overflow: TextOverflow.ellipsis),
+            items: products.map((p) => DropdownMenuItem(
+              value: p.sku,
+              child: Text('${p.sku} - ${p.name} (${p.stock} in stock)'),
             )).toList(),
             onChanged: (v) => setState(() => _selectedProduct = v),
           ),
@@ -118,7 +123,7 @@ class _StockAdjustmentScreenState extends State<StockAdjustmentScreen> {
                     border: Border.all(color: AppColors.border),
                   ),
                   child: Text(
-                    '${currentStock + (int.tryParse(_qtyCtrl.text) ?? 0)} ${prod['unit']}',
+                    '${currentStock + (int.tryParse(_qtyCtrl.text) ?? 0)} ${prod.unit}',
                     style: AppTextStyles.labelLarge.copyWith(color: AppColors.primary),
                   ),
                 ),
@@ -154,7 +159,7 @@ class _StockAdjustmentScreenState extends State<StockAdjustmentScreen> {
                           border: Border.all(color: AppColors.border),
                         ),
                         child: Text(
-                          '${currentStock + (int.tryParse(_qtyCtrl.text) ?? 0)} ${prod['unit']}',
+                          '${currentStock + (int.tryParse(_qtyCtrl.text) ?? 0)} ${prod.unit}',
                           style: AppTextStyles.labelLarge.copyWith(color: AppColors.primary),
                         ),
                       ),
@@ -186,11 +191,11 @@ class _StockAdjustmentScreenState extends State<StockAdjustmentScreen> {
         children: [
           Text('Verification Summary', style: AppTextStyles.h4),
           const SizedBox(height: 16),
-          _summaryRow('Product', prod['name'] as String),
-          _summaryRow('SKU', prod['sku'] as String),
+          _summaryRow('Product', prod.name),
+          _summaryRow('SKU', prod.sku),
           _summaryRow('Warehouse Hub', _selectedWarehouse ?? ''),
-          _summaryRow('Current Physical', '$currentStock ${prod['unit']}'),
-          _summaryRow('Unit Valuation', '\$${(prod['costPrice'] as double).toStringAsFixed(2)}'),
+          _summaryRow('Current Physical', '$currentStock ${prod.unit}'),
+          _summaryRow('Unit Valuation', '\$${prod.costPrice.toStringAsFixed(2)}'),
           const Divider(height: 24),
           Container(
             padding: const EdgeInsets.all(12),
@@ -303,16 +308,25 @@ class _StockAdjustmentScreenState extends State<StockAdjustmentScreen> {
     );
   }
 
-  void _submit() {
+  void _submit() async {
     if (_formKey.currentState!.validate()) {
-      Get.snackbar(
-        'Adjustment Posted',
-        'Stock adjustment ADJ-2026-081 created successfully.',
-        backgroundColor: AppColors.success,
-        colorText: Colors.white,
-        snackPosition: SnackPosition.BOTTOM,
+      final productCtrl = Get.find<ProductController>();
+      final prod = productCtrl.products.firstWhere(
+        (p) => p.sku == _selectedProduct,
+        orElse: () => productCtrl.products.first,
       );
-      Get.back();
+      final delta = int.tryParse(_qtyCtrl.text.trim()) ?? 0;
+      final newStock = (prod.stock + delta).clamp(0, 99999);
+
+      final success = await productCtrl.adjustStock(
+        productId: prod.id,
+        newStock: newStock,
+        reason: '$_adjustmentType: ${_notesCtrl.text.trim().isEmpty ? "Routine verification" : _notesCtrl.text.trim()}',
+      );
+
+      if (success) {
+        Get.back();
+      }
     }
   }
 

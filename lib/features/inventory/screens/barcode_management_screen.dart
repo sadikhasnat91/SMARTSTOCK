@@ -9,7 +9,8 @@ import '../../../shared/widgets/badges/app_badge.dart';
 import '../../../shared/widgets/buttons/app_button.dart';
 import '../../../shared/widgets/inputs/app_text_field.dart';
 import '../../../shared/widgets/dialogs/app_dialog.dart';
-import '../../../data/mock/mock_products.dart';
+
+import '../../../shared/controllers/product_controller.dart';
 
 class BarcodeManagementScreen extends StatefulWidget {
   const BarcodeManagementScreen({super.key});
@@ -26,12 +27,19 @@ class _BarcodeManagementScreenState extends State<BarcodeManagementScreen> {
   @override
   void initState() {
     super.initState();
-    _items = MockProducts.products;
+    _refreshItems();
+  }
+
+  void _refreshItems() {
+    final productCtrl = Get.find<ProductController>();
+    _items = productCtrl.products.map((p) => p.toJson()).toList();
   }
 
   void _filter(String query) {
+    final productCtrl = Get.find<ProductController>();
+    final allProducts = productCtrl.products.map((p) => p.toJson()).toList();
     setState(() {
-      _items = MockProducts.products.where((p) {
+      _items = allProducts.where((p) {
         final q = query.toLowerCase();
         return (p['name'] as String).toLowerCase().contains(q) ||
             (p['sku'] as String).toLowerCase().contains(q) ||
